@@ -5,29 +5,33 @@
   esky.finder:  VersionFinder implementations for esky
 
 This module provides the default VersionFinder implementations for esky. The
-abstract base class "VersionFinder" defines the expected interface, while 
+abstract base class "VersionFinder" defines the expected interface, while
 "DefaultVersionFinder" provides a simple default implementation that hits a
 specified URL to look for new versions.
 
 """
-
 from __future__ import with_statement
+from future import standard_library
+standard_library.install_aliases()
+from builtins import range
+from builtins import str
+from builtins import object
 
 import os
 import re
-import urllib
-import urllib2
+import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error, urllib.parse
 import zipfile
 import shutil
 import tempfile
 import errno
-from urlparse import urlparse, urljoin
+from urllib.parse import urlparse, urljoin
 
 from esky.bootstrap import join_app_version
 from esky.errors import *
 from esky.util import deep_extract_zipfile, copy_ownership_info, \
-                      ESKY_CONTROL_DIR, ESKY_APPDATA_DIR, \
-                      really_rmtree, really_rename
+    ESKY_CONTROL_DIR, ESKY_APPDATA_DIR, \
+    really_rmtree, really_rename
 from esky.patch import apply_patch, PatchError
 
 
@@ -99,7 +103,6 @@ class VersionFinder(object):
         raise NotImplementedError
 
 
-
 class DefaultVersionFinder(VersionFinder):
     """VersionFinder implementing simple default download scheme.
 
@@ -113,7 +116,7 @@ class DefaultVersionFinder(VersionFinder):
     """
 
     def __init__(self,download_url):
-        self.download_url = download_url
+        self.download_url = str(download_url)
         super(DefaultVersionFinder,self).__init__()
         self.version_graph = VersionGraph()
 
@@ -131,7 +134,7 @@ class DefaultVersionFinder(VersionFinder):
             for target in (updir,workdir):
                 try:
                     os.mkdir(target)
-                except OSError, e:
+                except OSError as e:
                     if e.errno not in (errno.EEXIST,183):
                         raise
                 else:
@@ -167,7 +170,7 @@ class DefaultVersionFinder(VersionFinder):
             really_rmtree(os.path.join(rddir,nm))
 
     def open_url(self,url):
-        f = urllib2.urlopen(url, timeout=30)
+        f = urllib.request.urlopen(url, timeout=30)
         try:
             size = f.headers.get("content-length",None)
             if size is not None:
@@ -181,7 +184,7 @@ class DefaultVersionFinder(VersionFinder):
     def find_versions(self,app):
         version_re = "[a-zA-Z0-9\\.-_]+"
         appname_re = "(?P<version>%s)" % (version_re,)
-        name_re = "(%s|%s)" % (app.name, urllib.quote(app.name))
+        name_re = "(%s|%s)" % (app.name, urllib.parse.quote(app.name))
         appname_re = join_app_version(name_re,appname_re,app.platform)
         filename_re = "%s\\.(zip|exe|from-(?P<from_version>%s)\\.patch)"
         filename_re = filename_re % (appname_re,version_re,)
@@ -212,13 +215,13 @@ class DefaultVersionFinder(VersionFinder):
         return self.version_graph.get_versions(app.version)
 
     def fetch_version_iter(self,app,version):
-        #  There's always the possibility that a file fails to download or 
+        #  There's always the possibility that a file fails to download or
         #  that a patch fails to apply.  _fetch_file_iter and _prepare_version
         #  will remove such files from the version graph; we loop until we find
         #  a patch path that works, or we run out of options.
         name = self._ready_name(app,version)
         while not os.path.exists(name):
-            try:
+            try :
                 path = self.version_graph.get_best_path(app.version,version)
             except KeyError:
                 raise EskyVersionError(version)
@@ -233,7 +236,7 @@ class DefaultVersionFinder(VersionFinder):
                         else:
                             yield status
                 self._prepare_version(app,version,local_path)
-            except (PatchError,EskyVersionError,EnvironmentError), e:
+            except (PatchError,EskyVersionError,EnvironmentError) as e:
                 yield {"status":"retrying","size":None,"exception":e}
         yield {"status":"ready","path":name}
 
@@ -265,7 +268,7 @@ class DefaultVersionFinder(VersionFinder):
                             yield {"status": "downloading",
                                    "size": infile_size,
                                    "received": partfile.tell(),
-                            }
+                                   }
                             partfile.write(data)
                             outfile_size += len(data)
                             data = infile.read(1024*64)
@@ -307,7 +310,7 @@ class DefaultVersionFinder(VersionFinder):
                     #  Copy the current version across and go from there.
                     try:
                         self._copy_best_version(app,uppath)
-                    except EnvironmentError, e:
+                    except EnvironmentError as e:
                         self.version_graph.remove_all_links(path[0][1])
                         err = "couldn't copy current version: %s" % (e,)
                         raise PatchError(err)
@@ -327,15 +330,15 @@ class DefaultVersionFinder(VersionFinder):
                     patches = path[1:]
                 # TODO: remove compatability hooks for ESKY_APPDATA_DIR="".
                 # If a patch fails to apply because we've put an appdata dir
-                # where it doesn't expect one, try again with old layout. 
-                for _ in xrange(2):
+                # where it doesn't expect one, try again with old layout.
+                for _ in range(2):
                     #  Apply any patches in turn.
                     for (patchfile,patchurl) in patches:
                         try:
                             try:
                                 with open(patchfile,"rb") as f:
                                     apply_patch(uppath,f)
-                            except EnvironmentError, e:
+                            except EnvironmentError as e:
                                 if e.errno not in (errno.ENOENT,):
                                     raise
                                 if not path[0][0].endswith(".patch"):
@@ -416,7 +419,7 @@ class DefaultVersionFinder(VersionFinder):
             dest = os.path.join(uppath,ESKY_APPDATA_DIR)
         try:
             os.mkdir(dest)
-        except OSError, e:
+        except OSError as e:
             if e.errno not in (errno.EEXIST,183):
                 raise
         shutil.copytree(source,os.path.join(dest,best_vdir))
@@ -442,7 +445,6 @@ class DefaultVersionFinder(VersionFinder):
     def _ready_name(self,app,version):
         version = join_app_version(app.name,version,app.platform)
         return os.path.join(self._workdir(app,"ready"),version)
-
 
 class S3VersionFinder(DefaultVersionFinder):
     """VersionFinder that looks in a S3 bucket.
@@ -486,9 +488,8 @@ class S3VersionFinder(DefaultVersionFinder):
             else:
                 cost = 1
             self.version_graph.add_link(from_version or "", version,
-                                            dwl_url + href, cost)
+                                        dwl_url + href, cost)
         return self.version_graph.get_versions(app.version)
-
 
 class LocalVersionFinder(DefaultVersionFinder):
     """VersionFinder that looks only in a local directory.
@@ -557,7 +558,7 @@ class VersionGraph(object):
         """List all versions reachable from the given source version."""
         # TODO: be more efficient here
         best_paths = self.get_best_paths(source)
-        return [k for (k,v) in best_paths.iteritems() if k and v]
+        return [k for (k,v) in best_paths.items() if k and v]
 
     def get_best_path(self,source,target):
         """Get the best path from source to target.
@@ -581,7 +582,9 @@ class VersionGraph(object):
         best_paths[source] = []
         best_costs[""] = 0
         best_paths[""] = []
+        inc = 0
         while remaining:
+            inc+=1
             (cost,best) = sorted((best_costs[v],v) for v in remaining)[0]
             if cost is _inf:
                 break
@@ -592,7 +595,7 @@ class VersionGraph(object):
                     best_costs[v] = cost + v_cost
                     best_paths[v] = best_paths[best] + [v_link]
         return best_paths
-                
+
     def _get_best_link(self,source,target):
         if source not in self._links:
             return (_inf,"")
@@ -601,7 +604,7 @@ class VersionGraph(object):
         vias = self._links[source][target]
         if not vias:
             return (_inf,"")
-        vias = sorted((cost,via) for (via,cost) in vias.iteritems())
+        vias = sorted((cost,via) for (via,cost) in vias.items())
         return vias[0]
 
 
@@ -634,5 +637,8 @@ class _Inf(object):
     def __isub__(self,other):
         return self
 _inf = _Inf()
+
+
+
 
 

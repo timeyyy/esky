@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 #  Third entry point for testing an esky install.
 
@@ -16,7 +17,6 @@ import eskytester
 eskytester.yes_i_am_working()
 eskytester.yes_my_deps_are_working()
 eskytester.yes_my_data_is_installed()
-
 #  Test that we're at the best possible version
 assert sys.frozen
 app = esky.tests.TestableEsky(sys.executable,"http://localhost:{0}/dist/".format(LOCAL_HTTP_PORT))
@@ -30,7 +30,7 @@ if os.environ.get("ESKY_NEEDSROOT",""):
 try:
     app.cleanup()
 except esky.EskyLockedError:
-    print "LOCKED, SLEEPING"
+    print("LOCKED, SLEEPING")
     time.sleep(10)
     app.cleanup()
 assert os.path.isdir(os.path.join(app._get_versions_dir(),"eskytester-0.3."+platform))
@@ -54,3 +54,4 @@ if sys.platform == "win32":
 
 
 open(os.path.join(app.appdir,"tests-completed"),"w").close()
+

@@ -32,8 +32,6 @@ use during the bootstrap process:
 
 
 """
-
-
 import sys
 import errno
 
@@ -60,6 +58,16 @@ except NameError:
 #  RPython doesn't handle SystemExit automatically, so we put the exit code
 #  in this global var and catch SystemExit ourselves at the outmost scope.
 _exit_code = [0]
+
+# We fudge it up so we can use python 2 and 3 without relying on any external libraries
+if sys.version_info[0] > 2:
+   PY3 = True
+else:
+   PY3 = False
+try:
+   range = xrange
+except NameError:
+   pass
 
 #  The os module is not builtin, so we grab what we can from the
 #  platform-specific modules and fudge the rest.
@@ -98,6 +106,7 @@ elif "nt" in sys.builtin_module_names:
             if path[0].isalpha() and path[1] == ":":
                 return True
         return False
+
     def abspath(path):
         path = pathjoin(getcwd(),path)
         components_in = path.split(SEP)
@@ -125,16 +134,16 @@ elif "nt" in sys.builtin_module_names:
             tdir = None
         if tdir:
             try:
-                nt.mkdir(pathjoin(tdir,"esky-slave-procs"),0600)
+                nt.mkdir(pathjoin(tdir,"esky-slave-procs"),0o600)
             except EnvironmentError:
                 pass
             if exists(pathjoin(tdir,"esky-slave-procs")):
                 flags = nt.O_CREAT|nt.O_EXCL|nt.O_TEMPORARY|nt.O_NOINHERIT
-                for i in xrange(10):
+                for i in range(10):
                     tfilenm = "slave-%d.%d.txt" % (nt.getpid(),i,)
                     tfilenm = pathjoin(tdir,"esky-slave-procs",tfilenm)
                     try:
-                        os_open(tfilenm,flags,0600)
+                        os_open(tfilenm,flags,0o600)
                         args.insert(1,tfilenm)
                         args.insert(1,"--esky-slave-proc")
                         break
@@ -148,16 +157,15 @@ elif "nt" in sys.builtin_module_names:
         _exit_code[0] = res
         raise SystemExit(res)
     #  A fake fcntl module which is false, but can fake out RPython
-    class fcntl:
+    class fcntl(object):
         LOCK_SH = 0
         def flock(self,fd,mode):
             pass
-        def __nonzero__(self):
+        def __bool__(self):
             return False
     fcntl = fcntl()
 else:
     raise RuntimeError("unsupported platform: " + sys.platform)
-
 
 if __rpython__:
     # RPython provides ll hooks for the actual os.environ object, not the
@@ -167,7 +175,7 @@ if __rpython__:
     # RPython doesn't have access to the "sys" module, so we fake it out.
     # The entry_point function will set these value appropriately.
     _sys = sys
-    class sys:
+    class sys(object):
         platform = _sys.platform
         executable = _sys.executable
         argv = _sys.argv
@@ -191,9 +199,9 @@ if __rpython__:
         i = 0
         while i < len(l1) and i < len(l2):
             if l1[i] > l2[i]:
-               return True
+                return True
             if l1[i] < l2[i]:
-               return False
+                return False
             i += 1
         if len(l1) > len(l2):
             return True
@@ -202,18 +210,18 @@ if __rpython__:
         slst = []
         if reverse:
             for item in lst:
-                for j in xrange(len(slst)):
+                for j in range(len(slst)):
                     if not _list_gt(slst[j][0],item[0]):
                         slst.insert(j,item)
-                        break 
+                        break
                 else:
                     slst.append(item)
         else:
             for item in lst:
-                for j in xrange(len(slst)):
+                for j in range(len(slst)):
                     if _list_gt(slst[j][0],item[0]):
                         slst.insert(j,item)
-                        break 
+                        break
                 else:
                     slst.append(item)
         return slst
@@ -230,7 +238,7 @@ if __rpython__:
     # RPython doesn't provide the "fcntl" module.  Fake it.
     # TODO: implement it using externals
     if fcntl:
-        class fcntl:
+        class fcntl(object):
             LOCK_SH = fcntl.LOCK_SH
             def flock(self,fd,mode):
                 pass
@@ -268,7 +276,7 @@ def exists(path):
     """Local re-implementation of os.path.exists."""
     try:
         stat(path)
-    except EnvironmentError, e:
+    except EnvironmentError as e:
         # TODO: how to get the errno under RPython?
         if not __rpython__:
             if e.errno not in (errno.ENOENT,errno.ENOTDIR,errno.ESRCH,):
@@ -408,7 +416,7 @@ def _chainload(target_dir):
         try:
             execv(target_exe,[target_exe] + sys.argv[1:])
             return
-        except EnvironmentError, exc_value:
+        except EnvironmentError as exc_value:
             #  Careful, RPython lacks a usable exc_info() function.
             exc_type,_,traceback = sys.exc_info()
             if not __rpython__:
@@ -420,11 +428,13 @@ def _chainload(target_dir):
     else:
         if exc_value is not None:
             if exc_type is not None:
-                raise exc_type,exc_value,traceback
+                if PY3:
+                    raise exc_type(exc_value).with_traceback()
+                else:
+                    raise exc_type(exc_value)
             else:
-                raise exc_value
+                raise exc_type(exc_value)
         raise RuntimeError("couldn't chainload any executables")
-
 
 def get_best_version(appdir,include_partial_installs=False,appname=None):
     """Get the best usable version directory from inside the given appdir.
@@ -520,7 +530,7 @@ def is_uninstalled_version_dir(vdir):
     if exists(pathjoin(vdir,ESKY_CONTROL_DIR,"bootstrap-manifest-old.txt")):
         return True
     return False
-    
+
 
 
 def split_app_version(s):
@@ -548,7 +558,7 @@ def join_app_version(appname,version,platform):
     For example, ("app-name","0.1.2","win32") => appname-0.1.2.win32
     """
     return "%s-%s.%s" % (appname,version,platform,)
-    
+
 
 def parse_version(s):
     """Parse a version string into a chronologically-sortable key
@@ -669,14 +679,16 @@ if __rpython__:
     def target(driver,args):
         """Target function for compiling a standalone bootstraper with PyPy."""
         def entry_point(argv):
-             exit_code = 0
-             #  TODO: resolve symlinks etc
-             sys.executable = abspath(pathjoin(getcwd(),argv[0]))
-             sys.argv = argv
-             try:
-                 main()
-             except SystemExit, e:
-                 exit_code = _exit_code[0]
-             return exit_code
+            exit_code = 0
+            #  TODO: resolve symlinks etc
+            sys.executable = abspath(pathjoin(getcwd(),argv[0]))
+            sys.argv = argv
+            try:
+                main()
+            except SystemExit as e:
+                exit_code = _exit_code[0]
+            return exit_code
         return entry_point, None
+
+
 

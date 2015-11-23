@@ -8,10 +8,25 @@
 
 from __future__ import with_statement
 from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import zip
+from builtins import next
+from builtins import hex
+from builtins import range
+from past.builtins import basestring
+from builtins import object
 
 import sys
 import errno
+import functools
+
 LOCAL_HTTP_PORT = 8000
+
+if sys.version_info[0] > 2:
+    PY3 = True
+else:
+    PY3 = False
 
 #  Since esky apps are required to call the esky.run_startup_hooks() method on
 #  every invocation, we want as little overhead as possible when importing
@@ -44,7 +59,7 @@ def lazy_import(func):
         namespace = None
     else:
         namespace = f.f_locals
-    return _LazyImport(func.func_name,func,namespace)
+    return _LazyImport(func.__name__,func,namespace)
 
 
 class _LazyImport(object):
@@ -75,7 +90,7 @@ class _LazyImport(object):
                 self._esky_lazy_load()
             return getattr(self._esky_lazy_target,attr)
 
-    def __nonzero__(self):
+    def __bool__(self):
         if self._esky_lazy_target is _LazyImport:
             self._esky_lazy_load()
         return bool(self._esky_lazy_target)
@@ -112,12 +127,9 @@ def itertools():
     return itertools
 
 @lazy_import
-def StringIO():
-    try:
-        import cStringIO as StringIO
-    except ImportError:
-        import StringIO
-    return StringIO
+def io():
+    import io
+    return io
 
 @lazy_import
 def distutils():
@@ -133,12 +145,12 @@ if sys.version_info[:2] < (3, 4):
     def imp():
         import imp
         return imp
-        
+
     @lazy_import
     def marshal():
         import marshal
         return marshal
-        
+
     @lazy_import
     def struct():
         import struct
@@ -151,13 +163,13 @@ else:
 
 
 from esky.bootstrap import appdir_from_executable as _bs_appdir_from_executable
-from esky.bootstrap import get_best_version, get_all_versions,\
-                           is_version_dir, is_installed_version_dir,\
-                           is_uninstalled_version_dir,\
-                           split_app_version, join_app_version, parse_version,\
-                           get_original_filename, lock_version_dir,\
-                           unlock_version_dir, fcntl, ESKY_CONTROL_DIR,\
-                           ESKY_APPDATA_DIR
+from esky.bootstrap import get_best_version, get_all_versions, \
+    is_version_dir, is_installed_version_dir, \
+    is_uninstalled_version_dir, \
+    split_app_version, join_app_version, parse_version, \
+    get_original_filename, lock_version_dir, \
+    unlock_version_dir, fcntl, ESKY_CONTROL_DIR, \
+    ESKY_APPDATA_DIR
 
 
 def files_differ(file1,file2,start=0,stop=None):
@@ -166,7 +178,7 @@ def files_differ(file1,file2,start=0,stop=None):
         stat1 = os.stat(file1)
         stat2 = os.stat(file2)
     except EnvironmentError:
-         return True
+        return True
     if stop is None and stat1.st_size != stat2.st_size:
         return True
     f1 = open(file1,"rb")
@@ -207,22 +219,22 @@ def pairwise(iterable):
     """Iterator over pairs of elements from the given iterable."""
     a,b = itertools.tee(iterable)
     try:
-        b.next()
+        next(b)
     except StopIteration:
         pass
-    return itertools.izip(a,b)
+    return zip(a,b)
 
 
 def common_prefix(iterables):
     """Find the longest common prefix of a series of iterables."""
     iterables = iter(iterables)
     try:
-        prefix = iterables.next()
+        prefix = next(iterables)
     except StopIteration:
         raise ValueError("at least one iterable is required")
     for item in iterables:
         count = 0
-        for (c1,c2) in itertools.izip(prefix,item):
+        for (c1,c2) in zip(prefix,item):
             if c1 != c2:
                 break
             count += 1
@@ -282,7 +294,7 @@ def extract_zipfile(source,target,name_filter=None):
             zf_open = zf.open
         else:
             def zf_open(nm,mode):
-                return StringIO.StringIO(zf.read(nm))
+                return io.StringIO(zf.read(nm))
         for nm in zf.namelist():
             if nm.endswith("/"):
                 continue
@@ -296,7 +308,7 @@ def extract_zipfile(source,target,name_filter=None):
             if not os.path.isdir(os.path.dirname(outfilenm)):
                 os.makedirs(os.path.dirname(outfilenm))
             zinfo = zf.getinfo(nm)
-            if hex(zinfo.external_attr) == 2716663808L: # it's a symlink
+            if hex(zinfo.external_attr) == 2716663808: # it's a symlink
                 target = zf.read(nm)
                 os.symlink(target, outfilenm)
                 continue
@@ -309,7 +321,7 @@ def extract_zipfile(source,target,name_filter=None):
                     outfile.close()
             finally:
                 infile.close()
-            mode = zinfo.external_attr >> 16L
+            mode = zf.getinfo(nm).external_attr >> 16
             if mode:
                 os.chmod(outfilenm,mode)
     finally:
@@ -345,7 +357,7 @@ def deep_extract_zipfile(source,target,name_filter=None):
                 return name_filter(nm[len(prefix):])
             return nm[len(prefix):]
     else:
-         new_name_filter = name_filter
+        new_name_filter = name_filter
     return extract_zipfile(source,target,new_name_filter)
 
 
@@ -403,7 +415,7 @@ def create_zipfile(source,target,get_zipinfo=None,members=None,compress=None):
             else: # isinstance(zinfo,zipfile.ZipInfo)
                 pass
             zinfo.create_system = 3
-            zinfo.external_attr = 2716663808L # symlink: 0xA1ED0000
+            zinfo.external_attr = 2716663808 # symlink: 0xA1ED0000
             zf.writestr(zinfo,dest)
         else: # not a symlink
             if zinfo is None:
@@ -471,7 +483,6 @@ def copy_ownership_info(src,dst,cur="",default=None):
 
 def get_backup_filename(filename):
     """Get the name to which a backup of the given file can be written.
-
     This will typically the filename with ".old" inserted at an appropriate
     location.  We try to preserve the file extension where possible.
     """
@@ -500,7 +511,7 @@ def is_locked_version_dir(vdir):
         f = open(lockfile,"r")
         try:
             fcntl.flock(f,fcntl.LOCK_EX|fcntl.LOCK_NB)
-        except EnvironmentError, e:
+        except EnvironmentError as e:
             if e.errno not in (errno.EACCES,errno.EAGAIN,):
                 raise
             return True
@@ -512,7 +523,6 @@ def is_locked_version_dir(vdir):
 
 def really_rename(source,target):
     """Like os.rename, but try to work around some win32 wierdness.
-
     Every so often windows likes to throw a spurious error about not being
     able to rename something; if we sleep for a brief period and try
     again it seems to get over it.
@@ -520,10 +530,10 @@ def really_rename(source,target):
     if sys.platform != "win32":
         os.rename(source,target)
     else:
-        for _ in xrange(100):
+        for _ in range(10):
             try:
                 os.rename(source,target)
-            except WindowsError, e:
+            except WindowsError as e:
                 if e.errno not in (errno.EACCES,):
                     raise
                 time.sleep(0.01)
@@ -535,7 +545,6 @@ def really_rename(source,target):
 
 def really_rmtree(path):
     """Like shutil.rmtree, but try to work around some win32 wierdness.
-
     Every so often windows likes to throw a spurious error about not being
     able to remove a directory - like claiming it still contains files after
     we just deleted all the files in the directory.  If we sleep for a brief
@@ -548,10 +557,10 @@ def really_rmtree(path):
         if not os.path.exists(path):
             shutil.rmtree(path)
         #  This is a little retry loop that catches troublesome errors.
-        for _ in xrange(100):
+        for _ in range(100):
             try:
                 shutil.rmtree(path)
-            except WindowsError, e:
+            except WindowsError as e:
                 if e.errno in (errno.ENOTEMPTY,errno.EACCES,):
                     time.sleep(0.01)
                 elif e.errno == errno.ENOENT:
@@ -564,6 +573,26 @@ def really_rmtree(path):
                 break
         else:
             shutil.rmtree(path)
+
+
+def really_mkdir(func,*args,**kwargs):
+    """Like os.makedir, but try to work around some win32 wierdness.
+    Every so often windows likes to throw a spurious error about not being
+    able to rename something; if we sleep for a brief period and try
+    again it seems to get over it.
+    """
+    if sys.platform != "win32":
+        func(*args, **kwargs)
+    else:
+        for _ in range(100):
+            try:
+                func(*args, **kwargs)
+            except WindowsError as e:
+                if e.errno not in (errno.EACCES,):
+                    raise
+                time.sleep(0.01)
+            else:
+                break
 
 
 def compile_to_bytecode(source_code, compile_filename=None):
@@ -579,7 +608,7 @@ def compile_to_bytecode(source_code, compile_filename=None):
         code = loader.source_to_code(source_code, '<string>')
         bytecode = importlib._bootstrap._code_to_bytecode(code, mtime=0, source_size=0)
     else:
-        loader = importlib._bootstrap_external.SourceLoader()    
+        loader = importlib._bootstrap_external.SourceLoader()
         code = loader.source_to_code(source_code, '<string>')
         bytecode = importlib._bootstrap_external._code_to_bytecode(code, mtime=0, source_size=0)
 
@@ -789,4 +818,3 @@ def freeze_future(dist):
     elif sys.platform == 'win32':
         if not PY3:
             dist.includes.extend(ESKY_INCLUDES_LIST)
-

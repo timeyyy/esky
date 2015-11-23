@@ -1,8 +1,10 @@
+from future import standard_library
+standard_library.install_aliases()
 
 import os
 import sys
-from HTMLParser import HTMLParser
-import cPickle
+from html.parser import HTMLParser
+import pickle
 import zipfile
 
 def yes_i_am_working():
@@ -37,15 +39,15 @@ def yes_my_data_is_installed():
         mydir = os.path.dirname(__file__)
         assert os.path.exists(os.path.join(mydir,"datafile.txt"))
         assert os.path.exists(os.path.join(mydir,"pkgdata.txt"))
-    
+
 
 class TestHTMLParser(HTMLParser):
-   def __init__(self):
-       HTMLParser.__init__(self)
-       self.expecting = ["html","body","p","p"]
-       self.feed("<html><body><p>hi</p><p>world</p></body></html>")
-   def handle_starttag(self,tag,attrs):
-       assert tag == self.expecting.pop(0)
+    def __init__(self):
+        HTMLParser.__init__(self)
+        self.expecting = ["html","body","p","p"]
+        self.feed("<html><body><p>hi</p><p>world</p></body></html>")
+    def handle_starttag(self,tag,attrs):
+        assert tag == self.expecting.pop(0)
 
 
 def script_path(app,script):
@@ -55,4 +57,5 @@ def script_path(app,script):
         return (os.path.join(app.appdir,"Contents/MacOS",script))
     else:
         return (os.path.join(app.appdir,script))
+
 

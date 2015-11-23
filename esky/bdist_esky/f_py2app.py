@@ -5,9 +5,9 @@
   esky.bdist_esky.f_py2app:  bdist_esky support for py2app
 
 """
-
 from __future__ import with_statement
-
+from future import standard_library
+standard_library.install_aliases()
 
 import os
 import sys
@@ -17,7 +17,6 @@ import shutil
 import inspect
 import struct
 import marshal
-
 
 from py2app.build_app import py2app, get_zipfile, Target
 
@@ -53,7 +52,7 @@ def freeze(dist):
     #  the generation of useful patches between versions.
     appnm = dist.distribution.get_name()+".app"
     app_dir = os.path.join(dist.freeze_dir,appnm)
-    resdir = os.path.join(app_dir,"Contents/Resources")
+    resdir = os.path.join(app_dir, "Contents/Resources")
     for (dirnm,_,filenms) in os.walk(resdir):
         for nm in filenms:
             if nm.endswith(".pyc"):
@@ -105,7 +104,7 @@ def freeze(dist):
         for nm in ("Python.framework","lib"+pydir+".dylib",):
             try:
                 copy_to_bootstrap_env("Contents/Frameworks/" + nm)
-            except Exception, e:
+            except Exception as e:
                 #  Distutils does its own crazy exception-raising which I
                 #  have no interest in examining right now.  Eventually this
                 #  guard will be more conservative.
@@ -178,7 +177,7 @@ def _make_py2app_cmd(dist_dir,distribution,options,exes):
     exe = exes[0]
     extra_exes = exes[1:]
     cmd = py2app(distribution)
-    for (nm,val) in options.iteritems():
+    for (nm,val) in options.items():
         setattr(cmd,nm,val)
     cmd.dist_dir = dist_dir
     cmd.app = [Target(script=exe.script,dest_base=exe.name)]
@@ -199,9 +198,9 @@ def _make_py2app_cmd(dist_dir,distribution,options,exes):
         resdir = os.path.join(dist_dir,distribution.get_name()+".app","Contents/Resources")
         scriptf = os.path.join(resdir,exe.name+".py")
         if not os.path.exists(scriptf):
-           old_scriptf = os.path.basename(exe.script)
-           old_scriptf = os.path.join(resdir,old_scriptf)
-           shutil.move(old_scriptf,scriptf)
+            old_scriptf = os.path.basename(exe.script)
+            old_scriptf = os.path.join(resdir,old_scriptf)
+            shutil.move(old_scriptf,scriptf)
     cmd.run = new_run
     return cmd
 
@@ -222,3 +221,6 @@ from posix import environ
 sys.executable = environ["EXECUTABLEPATH"]
 sys.argv[0] = environ["ARGVZERO"]
 """
+
+
+

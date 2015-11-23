@@ -58,8 +58,8 @@ class SecureStringPipe(base.SecureStringPipe):
             self.tdir = tempfile.mkdtemp()
             self.rnm = os.path.join(self.tdir,"master")
             self.wnm = os.path.join(self.tdir,"slave")
-            os.mkfifo(self.rnm,0600)
-            os.mkfifo(self.wnm,0600)
+            os.mkfifo(self.rnm,0o600)
+            os.mkfifo(self.wnm,0o600)
         else:
             self.tdir,self.rnm,self.wnm = data
 
@@ -110,7 +110,7 @@ class SecureStringPipe(base.SecureStringPipe):
             try:
                 if not os.listdir(self.tdir):
                     os.rmdir(self.tdir)
-            except EnvironmentError, e:
+            except EnvironmentError as e:
                 if e.errno != errno.ENOENT:
                     raise
         super(SecureStringPipe,self).close()
@@ -173,4 +173,5 @@ def run_startup_hooks():
         pipe = base.b64unpickle(os.environ["ESKY_SUDO_PIPE"])
         proxy.run(pipe)
         sys.exit(0)
+
 
