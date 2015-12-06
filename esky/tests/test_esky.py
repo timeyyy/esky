@@ -15,7 +15,6 @@ import unittest
 from os.path import dirname
 import subprocess
 import shutil
-import zipfile
 import threading
 import tempfile
 import urllib.request, urllib.error, urllib.parse
@@ -313,7 +312,6 @@ class TestEsky(unittest.TestCase):
             os.unlink(os.path.join(tdir,"dist","eskytester-0.2.%s.zip"%(platform,)))
 
             p = subprocess.Popen(cmd2)
-            import pdb;pdb.set_trace()
             assert p.wait() == 0
             os.unlink(os.path.join(appdir,"tests-completed"))
             print("spawning eskytester script3")
@@ -809,7 +807,7 @@ class TestPatch(unittest.TestCase):
         source = "example-app-0.1.tar.gz"
         target = "example-app-0.2.tar.gz"
         src_dir, tgt_dir = self._extract(source, target)
-        print src_dir, tgt_dir
+        print(src_dir, tgt_dir)
 
         # The two directory structures should initially be different.
         self.assertNotEquals(esky.patch.calculate_patch_digest(src_dir),

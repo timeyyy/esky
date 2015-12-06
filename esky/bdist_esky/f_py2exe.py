@@ -22,7 +22,7 @@ except ImportError:
   from py2exe.distutils_buildexe import py2exe
 import esky
 from esky.util import is_core_dependency, ESKY_CONTROL_DIR
-from esky import winres
+from esky import winres, freeze_future_fix
 
 try:
     import py2exe.mf as modulefinder
@@ -132,6 +132,7 @@ def freeze(dist):
     cmd.finalize_options()
     #  Actually run the freeze process
     cmd.run()
+    freeze_future_fix(dist)
     #  Copy data files into the freeze dir
     dist.distribution.data_files = my_data_files
     for (src,dst) in dist.get_data_files():

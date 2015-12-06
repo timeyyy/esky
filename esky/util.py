@@ -626,6 +626,49 @@ def preserve_cwd(function):
             os.chdir(cwd)
     return decorator
 
+@preserve_cwd
+def freeze_future_fix(freezer):
+    '''
+    if a library uses open() on a file that now is moved in our library.zip, it will fail
+    we unzip the package data and library so that it now works
+    '''
+    class Unnest(Exception):
+        '''This is raised to exit out of a nested loop'''
+        pass
+
+    modules_to_unzip = ('lib2to3',)
+    zip_archive_name = 'library.zip'
+    os.chdir(freezer.targetDir)
+    archive = zipfile.ZipFile(zip_archive_name)
+    for file in archive.namelist():
+        for bad_module in modules_to_unzip:
+            if file.startswith(bad_module + '/'):
+                archive.extract(file, os.getcwd())
+    archive.close()
+    # now copy over any data files as well (they had problems getting sucked in from
+    # our freezer)
+    if os.name == 'nt':
+        data_path = os.path.join(sys.exec_prefix, 'Lib', 'lib2to3')
+    elif 'linux' in sys.platform:
+        try:
+            # locating the folder path on linux...
+            for folder in sys.path:
+                if folder:
+                    for file in os.listdir(folder):
+                        for module in modules_to_unzip:
+                            if file == module:
+                                data_path = os.path.join(folder, module)
+                                raise Unnest
+        except Unnest:
+            pass
+        else:
+            raise Exception('One of our required modules could not be found')
+
+    data_files = (('Grammar.txt', 'PatternGrammar.txt'),)
+    for datas, module in zip(data_files, modules_to_unzip):
+        for data in datas:
+            shutil.copy(os.path.join(data_path, data), os.path.join(module, data))
+
 EXCLUDES_LIST = ('urllib.StringIO',
                 'urllib.UserDict',
                 'urllib.__builtin__',
