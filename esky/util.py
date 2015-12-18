@@ -668,6 +668,7 @@ def freeze_future_fix(freezer):
     for datas, module in zip(data_files, modules_to_unzip):
         for data in datas:
             shutil.copy(os.path.join(data_path, data), os.path.join(module, data))
+            # Todo delete the file from the zip?
 
 EXCLUDES_LIST = ('urllib.StringIO',
                 'urllib.UserDict',

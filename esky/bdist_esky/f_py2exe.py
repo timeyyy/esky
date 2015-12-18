@@ -21,8 +21,8 @@ try:
 except ImportError:
   from py2exe.distutils_buildexe import py2exe
 import esky
-from esky.util import is_core_dependency, ESKY_CONTROL_DIR
-from esky import winres, freeze_future_fix
+from esky.util import is_core_dependency, ESKY_CONTROL_DIR, freeze_future_fix
+from esky import winres
 
 try:
     import py2exe.mf as modulefinder
