@@ -17,7 +17,7 @@ before_script:
         - python -m SimpleHTTPServer 8000 &
 
 script:
-        - python -m pytest -m a
+        - python -m pytest 
 
 after_script:
         - kill `ps aux | grep "python -m SimpleHTTPServer" | grep -v grep | awk '{print $2}'`

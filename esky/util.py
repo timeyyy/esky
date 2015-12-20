@@ -16,6 +16,8 @@ from builtins import hex
 from builtins import range
 from past.builtins import basestring
 from builtins import object
+import contextlib
+import io
 
 import sys
 import errno
@@ -862,3 +864,19 @@ def freeze_future(dist):
     elif sys.platform == 'win32':
         if not PY3:
             dist.includes.extend(ESKY_INCLUDES_LIST)
+
+@contextlib.contextmanager
+def silence():
+    ''''
+    stop printint to stdout and stderr, was bugging on py2 so whatever
+    '''
+    if sys.version_info[0] > 2:
+        save_stdout = sys.stdout
+        save_stderr = sys.stderr
+        sys.stdout = io.StringIO()
+        sys.stderr = io.StringIO()
+        yield
+        sys.stdout = save_stdout
+        sys.stderr = save_stderr
+    else:
+        yield

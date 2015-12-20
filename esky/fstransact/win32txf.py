@@ -5,6 +5,7 @@
   esky.fstransact.win32fxt:  win32 transactional filesystem operations
 
 """
+from __future__ import print_function
 from builtins import object
 from builtins import str
 
@@ -21,6 +22,7 @@ def check_call(func):
     def wrapper(*args,**kwds):
         res = func(*args,**kwds)
         if not res or res == 0xFFFFFFFF or res == -1:
+            print(func, args, kwds)
             raise ctypes.WinError()
         return res
     return wrapper

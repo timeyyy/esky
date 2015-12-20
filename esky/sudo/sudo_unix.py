@@ -85,7 +85,6 @@ class SecureStringPipe(base.SecureStringPipe):
         else:
             self.wfd = os.open(self.wnm,os.O_WRONLY)
             self.rfd = os.open(self.rnm,os.O_RDONLY)
-        print self.rfd, 'set in _open'
         os.unlink(self.wnm)
 
     def _recover(self):
@@ -99,7 +98,6 @@ class SecureStringPipe(base.SecureStringPipe):
             pass
 
     def close(self):
-        print 'in unix close '
         if self.rfd is not None:
             os.close(self.rfd)
             os.close(self.wfd)
