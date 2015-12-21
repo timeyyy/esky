@@ -74,12 +74,12 @@ if not hasattr(HTTPServer,"shutdown"):
             pass
     HTTPServer.shutdown = socketserver_shutdown
 
-def setup_module():
-    # On linux running tests on py3 and then py 2 requires this to be done
-    if os.path.exists('tests'):
-        really_rmtree(os.path.join('tests', '__pycache__'))
-    elif os.path.basename(os.getcwd()) == 'tests':
-        really_rmtree('__pycache__')
+# def setup_module():
+#     On linux running tests on py3 and then py 2 requires this to be done
+#     if os.path.exists('tests'):
+#         really_rmtree(os.path.join('tests', '__pycache__'))
+#     elif os.path.basename(os.getcwd()) == 'tests':
+#         really_rmtree('__pycache__')
 
 @contextmanager
 def setenv(key,value):
