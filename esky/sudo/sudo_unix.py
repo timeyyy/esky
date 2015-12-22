@@ -151,7 +151,7 @@ def spawn_sudo(proxy):
         if sudo is None:
             sudo = find_exe("cocoasudo","--prompt='%s'" % (display_name,))
     if sudo is None:
-        sudo = find_exe("sudo")
+        sudo = find_exe("sudo", "-E")
     if sudo is None:
         sudo = []
     # Make it a slave process so it dies if we die
