@@ -656,11 +656,15 @@ def freeze_future_fix(freezer):
             # locating the folder path on linux...
             for folder in sys.path:
                 if folder:
-                    for file in os.listdir(folder):
-                        for module in modules_to_unzip:
-                            if file == module:
-                                data_path = os.path.join(folder, module)
-                                raise Unnest
+                    try:
+                        for file in os.listdir(folder):
+                            for module in modules_to_unzip:
+                                if file == module:
+                                    data_path = os.path.join(folder, module)
+                                    raise Unnest
+                    except OSError:
+                        # In a virtualenv weird stuff gets put on the path sometimes
+                        pass
         except Unnest:
             pass
         else:
