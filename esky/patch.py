@@ -626,7 +626,7 @@ class Patcher(object):
             while True:
                 cmd = self._read_command()
                 getattr(self,"_do_" + _COMMANDS[cmd])()
-        except EOFError:
+        except (EOFError, IndexError):
             self._check_end_patch()
             self._cleanup_patch()
         finally:
