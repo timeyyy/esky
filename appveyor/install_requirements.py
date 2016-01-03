@@ -13,9 +13,10 @@ else:
 	file = 'appveyor-requirements.txt'
 
 
-proc = sub.Popen('pip install -r '+os.path.join('appveyor', file),
+proc = sub.Popen('pip install -r '+file,
 		stderr=sub.PIPE,
-		stdout=sub.PIPE)
+		stdout=sub.PIPE,
+        cwd=os.path.join(os.getcwd(),'appveyor'))
 out, errs = proc.communicate()
 
 if out:
