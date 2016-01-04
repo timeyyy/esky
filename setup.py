@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 import sys
 setup_kwds = {}
@@ -28,9 +29,8 @@ try:
         lines.append(ln)
         ln = next(src)
     exec("".join(lines),info)
-except Exception:
-    raise
-    pass
+except Exception as err:
+    print(err)
 
 
 NAME = "esky"
