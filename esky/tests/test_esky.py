@@ -311,6 +311,7 @@ class TestEsky(unittest.TestCase):
             p = subprocess.Popen(cmd1)
             if p.wait():
                 print(p.stdout)
+                print(p.stderr)
                 assert False
             os.unlink(os.path.join(appdir,"tests-completed"))
             print("spawning eskytester script2")
@@ -319,12 +320,14 @@ class TestEsky(unittest.TestCase):
             p = subprocess.Popen(cmd2)
             if p.wait():
                 print(p.stdout)
+                print(p.stderr)
                 assert False
             os.unlink(os.path.join(appdir,"tests-completed"))
             print("spawning eskytester script3")
             p = subprocess.Popen(cmd3)
             if p.wait():
                 print(p.stdout)
+                print(p.stderr)
                 assert False
             os.unlink(os.path.join(appdir,"tests-completed"))
         finally:
