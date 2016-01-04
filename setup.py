@@ -29,6 +29,7 @@ try:
         ln = next(src)
     exec("".join(lines),info)
 except Exception:
+    raise
     pass
 
 
