@@ -79,7 +79,7 @@ build_script:
     #Build the compiled extension
     #NO IDEA WHY THIS IS REQUIRED BUT ESKY TESTS FAIL WITHOUT IT ...
     - ps: "ls"
-    - "%CMD_IN_ENV% python setup.py build"
+      #    - "%CMD_IN_ENV% python setup.py build"
 
 test_script:
     # Run the project tests
