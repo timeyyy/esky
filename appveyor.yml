@@ -79,7 +79,8 @@ build_script:
 
 test_script:
   # Run the project tests
-  - "python -m pytest -m \"not py2exe\" -v esky/tests"
+  - "python -m pytest -m \"not py2exe\" -v build"
+  #- "python -m pytest -m \"not py2exe\" -v esky/tests"
 
 #after_test:
   # If tests are successful, create binary packages for the project.
