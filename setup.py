@@ -30,7 +30,8 @@ try:
         ln = next(src)
     exec("".join(lines),info)
 except Exception as err:
-    print(err)
+    pass
+    #print(err)
 
 
 NAME = "esky"
