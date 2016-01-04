@@ -1,3 +1,4 @@
+from __future__ import print_function
 from builtins import object
 
 #  Entry point for testing an esky install.
@@ -11,7 +12,7 @@ import esky
 import esky.tests
 import esky.util
 from esky.util import LOCAL_HTTP_PORT
-
+print(1)
 ESKY_CONTROL_DIR = esky.util.ESKY_CONTROL_DIR
 ESKY_APPDATA_DIR = esky.util.ESKY_APPDATA_DIR
 
@@ -21,6 +22,7 @@ eskytester.yes_i_am_working()
 eskytester.yes_my_deps_are_working()
 eskytester.yes_my_data_is_installed()
 
+print(2)
 assert sys.frozen
 assert __name__ == "__main__"
 app = esky.tests.TestableEsky(sys.executable,"http://localhost:{0}/dist/".format(LOCAL_HTTP_PORT))
@@ -44,6 +46,7 @@ assert BTestClass().a == "B"
 
 #  Spawn another instance that just busy-loops,
 #  holding a lock on the current version.
+print(3)
 if len(sys.argv) > 1:
     while True:
         time.sleep(0.1)
@@ -75,6 +78,7 @@ else:
     spawn_busy_loop(app)
 
 #  Upgrade to the next version (0.2, even though 0.3 is available)
+print(4)
 if os.environ.get("ESKY_NEEDSROOT",""):
     already_root = app.has_root()
     app.get_root()
@@ -92,6 +96,7 @@ assert app.version == "0.2"
 assert app.find_update() == "0.3"
 
 
+print(5)
 assert os.path.isfile(eskytester.script_path(app,"script1"))
 assert os.path.isfile(eskytester.script_path(app,"script2"))
 if ESKY_APPDATA_DIR:
@@ -101,6 +106,7 @@ else:
 assert os.path.isfile(os.path.join(app._get_versions_dir(),"eskytester-0.2."+esky.util.get_platform(),ESKY_CONTROL_DIR,"bootstrap-manifest.txt"))
 
 
+print(6)
 #  Check that we can't uninstall a version that's in use.
 if ESKY_APPDATA_DIR:
     assert esky.util.is_locked_version_dir(os.path.join(os.path.dirname(app._get_versions_dir()),"eskytester-0.1."+esky.util.get_platform()))
