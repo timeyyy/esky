@@ -23,7 +23,8 @@ import cx_Freeze.hooks
 INITNAME = "cx_Freeze__init__"
 
 import esky
-from esky.util import is_core_dependency, compile_to_bytecode, preserve_cwd
+from esky.util import is_core_dependency, compile_to_bytecode
+from esky.bdist_esky.f_util import freeze_future_fix
 
 
 def freeze(dist):
@@ -64,7 +65,7 @@ def freeze(dist):
     #  Freeze up the executables
     f = cx_Freeze.Freezer(executables,**kwds)
     f.Freeze()
-    freeze_future_fix(f, **kwds)
+    freeze_future_fix(dist_dir=f.targetDir, freezer='cxfreeze')
     #  Copy data files into the freeze dir
     for (src,dst) in dist.get_data_files():
         dst = os.path.join(dist.freeze_dir,dst)
@@ -159,51 +160,6 @@ def freeze(dist):
             bslib.writestr(zipfile.ZipInfo("esky/__init__.pyc",cdate),eskycode)
             bslib.writestr(zipfile.ZipInfo("esky/bootstrap.pyc",cdate),eskybscode)
             bslib.close()
-
-
-#TODO do i need this for py2exe? and py2app?
-@preserve_cwd
-def freeze_future_fix(freezer, **options):
-    '''
-    if a library uses open() on a file that now is moved in our library.zip, it will fail
-    we unzip the package data and library so that it now works
-    '''
-    class Unnest(Exception):
-        '''This is raised to exit out of a nested loop'''
-        pass
-
-    modules_to_unzip = ('lib2to3',)
-    zip_archive_name = 'library.zip'
-    os.chdir(freezer.targetDir)
-    archive = zipfile.ZipFile(zip_archive_name)
-    for file in archive.namelist():
-        for bad_module in modules_to_unzip:
-            if file.startswith(bad_module + '/'):
-                archive.extract(file, os.getcwd())
-    archive.close()
-    # now copy over any data files as well (they had problems getting sucked in from
-    # our freezer)
-    if os.name == 'nt':
-        data_path = os.path.join(sys.exec_prefix, 'Lib', 'lib2to3')
-    elif 'linux' in sys.platform:
-        try:
-            # locating the folder path on linux...
-            for folder in sys.path:
-                if folder:
-                    for file in os.listdir(folder):
-                        for module in modules_to_unzip:
-                            if file == module:
-                                data_path = os.path.join(folder, module)
-                                raise Unnest
-        except Unnest:
-            pass
-        else:
-            raise Exception('One of our required modules could not be found')
-
-    data_files = (('Grammar.txt', 'PatternGrammar.txt'),)
-    for datas, module in zip(data_files, modules_to_unzip):
-        for data in datas:
-            shutil.copy(os.path.join(data_path, data), os.path.join(module, data))
 
 
 def _normalise_opt_name(nm):
@@ -343,7 +299,6 @@ def _chainload(target_dir):
       sys.exit(0)
 
 """
-
 
 
 

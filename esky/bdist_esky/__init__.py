@@ -32,9 +32,10 @@ from distutils.core import Command
 from distutils.util import convert_path
 
 import esky.patch
+from esky.bdist_esky.f_util import freeze_future
 from esky.util import get_platform, create_zipfile, \
                       split_app_version, join_app_version, ESKY_CONTROL_DIR, \
-                      ESKY_APPDATA_DIR, really_rmtree, freeze_future
+                      ESKY_APPDATA_DIR, really_rmtree
 
 if sys.platform == "win32":
     from esky import winres

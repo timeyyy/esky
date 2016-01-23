@@ -15,7 +15,6 @@ import unittest
 from os.path import dirname
 import subprocess
 import shutil
-import zipfile
 import threading
 import tempfile
 import urllib.request, urllib.error, urllib.parse
