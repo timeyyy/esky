@@ -50,21 +50,21 @@ def _errcheck_bool(value,func,args):
 
 class SHELLEXECUTEINFO(ctypes.Structure):
     _fields_ = (
-      ("cbSize",ctypes.wintypes.DWORD),
-      ("fMask",ctypes.c_ulong),
-      ("hwnd",ctypes.wintypes.HANDLE),
-      ("lpVerb",ctypes.c_char_p),
-      ("lpFile",ctypes.c_char_p),
-      ("lpParameters",ctypes.c_char_p),
-      ("lpDirectory",ctypes.c_char_p),
-      ("nShow",ctypes.c_int),
-      ("hInstApp",ctypes.wintypes.HINSTANCE),
-      ("lpIDList",ctypes.c_void_p),
-      ("lpClass",ctypes.c_char_p),
-      ("hKeyClass",ctypes.wintypes.HKEY),
-      ("dwHotKey",ctypes.wintypes.DWORD),
-      ("hIconOrMonitor",ctypes.wintypes.HANDLE),
-      ("hProcess",ctypes.wintypes.HANDLE),
+        ("cbSize",ctypes.wintypes.DWORD),
+        ("fMask",ctypes.c_ulong),
+        ("hwnd",ctypes.wintypes.HANDLE),
+        ("lpVerb",ctypes.c_char_p),
+        ("lpFile",ctypes.c_char_p),
+        ("lpParameters",ctypes.c_char_p),
+        ("lpDirectory",ctypes.c_char_p),
+        ("nShow",ctypes.c_int),
+        ("hInstApp",ctypes.wintypes.HINSTANCE),
+        ("lpIDList",ctypes.c_void_p),
+        ("lpClass",ctypes.c_char_p),
+        ("hKeyClass",ctypes.wintypes.HKEY),
+        ("dwHotKey",ctypes.wintypes.DWORD),
+        ("hIconOrMonitor",ctypes.wintypes.HANDLE),
+        ("hProcess",ctypes.wintypes.HANDLE),
     )
 
 
@@ -170,7 +170,7 @@ def can_get_root():
             try:
                 cls = TokenLinkedToken
                 GetTokenInformation(token,cls,byref(lToken),sizeof(lToken),byref(sz))
-            except WindowsError, e:
+            except WindowsError as e:
                 if e.winerror == ERROR_NO_SUCH_LOGON_SESSION:
                     return False
                 elif e.winerror == ERROR_PRIVILEGE_NOT_HELD:
@@ -206,7 +206,7 @@ class FakePopen(KillablePopen):
         kernel32.TerminateProcess(self._handle,-1)
     def _execute_child(self,*args,**kwds):
         pass
-    
+
 
 class SecureStringPipe(base.SecureStringPipe):
     """Two-way pipe for securely communicating strings with a sudo subprocess.
@@ -238,8 +238,8 @@ class SecureStringPipe(base.SecureStringPipe):
         if pipename is None:
             self.pipename = r"\\.\pipe\esky-" + uuid.uuid4().hex
             self.pipe = kernel32.CreateNamedPipeA(
-                          self.pipename,0x03,0x00,1,8192,8192,0,None
-                        )
+                self.pipename,0x03,0x00,1,8192,8192,0,None
+            )
         else:
             self.pipename = pipename
             self.pipe = None
@@ -324,3 +324,4 @@ def run_startup_hooks():
         pipe = base.b64unpickle(sys.argv[3])
         proxy.run(pipe)
         sys.exit(0)
+

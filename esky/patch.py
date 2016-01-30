@@ -52,11 +52,17 @@ already have the corresponding zip files.
 """
 
 from __future__ import with_statement
-try:
-    bytes = bytes
-except NameError:
-    bytes = str
-
+from __future__ import print_function
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import map
+from builtins import str
+from builtins import bytes
+from builtins import chr
+from builtins import range
+from past.utils import old_div
+from builtins import object
 
 import os
 import sys
@@ -72,10 +78,9 @@ if sys.version_info[0] < 3:
     try:
         from cStringIO import StringIO as BytesIO
     except ImportError:
-       from StringIO import StringIO as BytesIO
+        from StringIO import StringIO as BytesIO
 else:
     from io import BytesIO
-
 
 #  Try to get code for working with bsdiff4-format patches.
 #
@@ -143,9 +148,9 @@ else:
             bcontrol = bz2.decompress(patch[32:e_bcontrol])
             bdiff = bz2.decompress(patch[e_bcontrol:e_bdiff])
             bextra = bz2.decompress(patch[e_bdiff:])
-            #  Decode the control tuples 
+            #  Decode the control tuples
             tcontrol = []
-            for i in xrange(0,len(bcontrol),24):
+            for i in range(0,len(bcontrol),24):
                 tcontrol.append((
                     _decode_offt(bcontrol[i:i+8]),
                     _decode_offt(bcontrol[i+8:i+16]),
@@ -158,7 +163,7 @@ else:
 class bsdiff4_py(object):
     """Pure-python version of bsdiff4 module that can only patch, not diff.
 
-    By providing a pure-python fallback, we don't force frozen apps to 
+    By providing a pure-python fallback, we don't force frozen apps to
     bundle the bsdiff module in order to make use of patches.  Besides,
     the patch-applying algorithm is very simple.
     """
@@ -186,9 +191,9 @@ class bsdiff4_py(object):
         bcontrol = bz2.decompress(patch[32:e_bcontrol])
         bdiff = bz2.decompress(patch[e_bcontrol:e_bdiff])
         bextra = bz2.decompress(patch[e_bdiff:])
-        #  Decode the control tuples 
+        #  Decode the control tuples
         tcontrol = []
-        for i in xrange(0,len(bcontrol),24):
+        for i in range(0,len(bcontrol),24):
             tcontrol.append((
                 _decode_offt(bcontrol[i:i+8]),
                 _decode_offt(bcontrol[i+8:i+16]),
@@ -204,10 +209,10 @@ class bsdiff4_py(object):
             diff_data = bdiff.read(x)
             orig_data = source.read(x)
             if sys.version_info[0] < 3:
-                for i in xrange(len(diff_data)):
+                for i in range(len(diff_data)):
                     result.write(chr((ord(diff_data[i])+ord(orig_data[i]))%256))
             else:
-                for i in xrange(len(diff_data)):
+                for i in range(len(diff_data)):
                     result.write(bytes([(diff_data[i]+orig_data[i])%256]))
             result.write(bextra.read(y))
             source.seek(z,os.SEEK_CUR)
@@ -239,8 +244,8 @@ ESKY_FILELIST = "esky_filelist.txt"
 
 
 from esky.errors import Error
-from esky.util import extract_zipfile, create_zipfile, deep_extract_zipfile,\
-                      zipfile_common_prefix_dir, really_rmtree, really_rename
+from esky.util import extract_zipfile, create_zipfile, deep_extract_zipfile, \
+    zipfile_common_prefix_dir, really_rmtree, really_rename
 
 __all__ = ["PatchError","DiffError","main","write_patch","apply_patch",
            "Differ","Patcher"]
@@ -265,23 +270,23 @@ class DiffError(Error):
 #  anything but adding to the end will break all existing patches!
 #
 _COMMANDS = [
- "END",           # END():               stop processing current context
- "SET_PATH",      # SET_PATH(path):      set current target path 
- "JOIN_PATH",     # JOIN_PATH(path):     join path to the current target
- "POP_PATH",      # POP_PATH(h):         pop one level off current target
- "POP_JOIN_PATH", # POP_JOIN_PATH(path): pop the current path, then join
- "VERIFY_MD5",    # VERIFY_MD5(dgst):    check md5 digest of current target
- "REMOVE",        # REMOVE():            remove the current target
- "MAKEDIR",       # MAKEDIR():           make directory at current target
- "COPY_FROM",     # COPY_FROM(path):     copy item at path to current target
- "MOVE_FROM",     # MOVE_FROM(path):     move item at path to current target
- "PF_COPY",       # PF_COPY(n):          patch file; copy n bytes from input
- "PF_SKIP",       # PF_SKIP(n):          patch file; skip n bytes from input
- "PF_INS_RAW",    # PF_INS_RAW(bytes):   patch file; insert raw bytes 
- "PF_INS_BZ2",    # PF_INS_BZ2(bytes):   patch file; insert unbzip'd bytes
- "PF_BSDIFF4",    # PF_BSDIFF4(n,p):     patch file; bsdiff4 from n input bytes
- "PF_REC_ZIP",    # PF_REC_ZIP(m,cs):    patch file; recurse into zipfile
- "CHMOD",         # CHMOD(mode):         set mode of current target
+    "END",           # END():               stop processing current context
+    "SET_PATH",      # SET_PATH(path):      set current target path
+    "JOIN_PATH",     # JOIN_PATH(path):     join path to the current target
+    "POP_PATH",      # POP_PATH(h):         pop one level off current target
+    "POP_JOIN_PATH", # POP_JOIN_PATH(path): pop the current path, then join
+    "VERIFY_MD5",    # VERIFY_MD5(dgst):    check md5 digest of current target
+    "REMOVE",        # REMOVE():            remove the current target
+    "MAKEDIR",       # MAKEDIR():           make directory at current target
+    "COPY_FROM",     # COPY_FROM(path):     copy item at path to current target
+    "MOVE_FROM",     # MOVE_FROM(path):     move item at path to current target
+    "PF_COPY",       # PF_COPY(n):          patch file; copy n bytes from input
+    "PF_SKIP",       # PF_SKIP(n):          patch file; skip n bytes from input
+    "PF_INS_RAW",    # PF_INS_RAW(bytes):   patch file; insert raw bytes
+    "PF_INS_BZ2",    # PF_INS_BZ2(bytes):   patch file; insert unbzip'd bytes
+    "PF_BSDIFF4",    # PF_BSDIFF4(n,p):     patch file; bsdiff4 from n input bytes
+    "PF_REC_ZIP",    # PF_REC_ZIP(m,cs):    patch file; recurse into zipfile
+    "CHMOD",         # CHMOD(mode):         set mode of current target
 ]
 
 # Make commands available as global variables
@@ -329,23 +334,13 @@ def _read_vint(stream):
     x += (b << e)
     return x
 
-if sys.version_info[0] > 2:
-    def _write_vint(stream,x):
-        """Write a vint-encoded integer to the given stream."""
-        while x >= 128:
-            b = x & 127
-            stream.write(bytes([b | 128]))
-            x = x >> 7
-        stream.write(bytes([x]))
-else:
-    def _write_vint(stream,x):
-        """Write a vint-encoded integer to the given stream."""
-        while x >= 128:
-            b = x & 127
-            stream.write(chr(b | 128))
-            x = x >> 7
-        stream.write(chr(x))
-
+def _write_vint(stream,x):
+    """Write a vint-encoded integer to the given stream."""
+    while x >= 128:
+        b = x & 127
+        stream.write(bytes([b | 128]))
+        x = x >> 7
+    stream.write(bytes([x]))
 
 def _read_zipfile_metadata(stream):
     """Read zipfile metadata from the given stream.
@@ -400,7 +395,7 @@ def paths_differ(path1,path2):
         return True
     return False
 
-    
+
 
 def calculate_digest(target,hash=hashlib.md5):
     """Calculate the digest of the given path.
@@ -485,14 +480,14 @@ class Patcher(object):
         """Read an integer from the command stream."""
         i = _read_vint(self.commands)
         if self.dry_run:
-            print "  ", i
+            print("  ", i)
         return i
 
     def _read_command(self):
         """Read the next command to be processed."""
         cmd = _read_vint(self.commands)
         if self.dry_run:
-            print _COMMANDS[cmd]
+            print(_COMMANDS[cmd])
         return cmd
 
     def _read_bytes(self):
@@ -502,7 +497,7 @@ class Patcher(object):
         if len(bytes) != l:
             raise PatchError("corrupted bytestring")
         if self.dry_run:
-            print "   [%s bytes]" % (len(bytes),)
+            print("   [%s bytes]" % (len(bytes),))
         return bytes
 
     def _read_path(self):
@@ -513,7 +508,7 @@ class Patcher(object):
             raise PatchError("corrupted path")
         path = bytes.decode("utf-8")
         if self.dry_run:
-            print "  ", path
+            print("  ", path)
         return path
 
     def _check_begin_patch(self):
@@ -573,7 +568,7 @@ class Patcher(object):
         self.outfile = None
         self.new_target = None
         return state
-        
+
     def _save_state(self):
         """Return the current state, for later restoration."""
         return (self.target,self.root_dir,self.infile,self.outfile,self.new_target)
@@ -943,7 +938,7 @@ class Differ(object):
         elif self._pending_pop_path:
             # POP_PATH,JOIN_PATH => POP_JOIN_PATH
             if cmd == JOIN_PATH:
-                for _ in xrange(self._pending_pop_path - 1):
+                for _ in range(self._pending_pop_path - 1):
                     _write_vint(self.outfile,POP_PATH)
                 _write_vint(self.outfile,POP_JOIN_PATH)
             # POP_PATH,SET_PATH => SET_PATH
@@ -951,7 +946,7 @@ class Differ(object):
                 _write_vint(self.outfile,SET_PATH)
             # Otherwise, write out all the POP_PATH instructions.
             else:
-                for _ in xrange(self._pending_pop_path):
+                for _ in range(self._pending_pop_path):
                     _write_vint(self.outfile,POP_PATH)
                 _write_vint(self.outfile,cmd)
             self._pending_pop_path = 0
@@ -1021,7 +1016,7 @@ class Differ(object):
         #  Now generate COPY or MOVE commands for all those new items.
         #  Doing them all in a batch means we gracefully cope with
         #  several tagrgets coming from the same source.
-        for nm, sibnm in nm_sibnm_map.iteritems():
+        for nm, sibnm in nm_sibnm_map.items():
             s_nm = os.path.join(source,sibnm)
             self._write_command(JOIN_PATH)
             self._write_path(nm)
@@ -1125,7 +1120,7 @@ class Differ(object):
                 return None
             # Hooray! Looks like something we can use.
             return zf
-      
+
     def _diff_dotzip_file(self,source,target):
         s_zf = self._open_and_check_zipfile(source)
         if s_zf is None:
@@ -1158,8 +1153,8 @@ class Differ(object):
                         self._diff(s_workdir,t_workdir)
                         self._write_command(END)
                 finally:
-                    t_zf.close() 
-                    s_zf.close() 
+                    t_zf.close()
+                    s_zf.close()
 
 
     def _diff_binary_file(self,source,target):
@@ -1225,7 +1220,7 @@ class Differ(object):
         """
         t_nm = os.path.join(target,nm)
         if os.path.isfile(t_nm):
-             # For files, I haven't decided on a good heuristic yet...
+            # For files, I haven't decided on a good heuristic yet...
             return None
         elif os.path.isdir(t_nm):
             #  For directories, decide similarity based on the number of
@@ -1271,7 +1266,7 @@ class Differ(object):
         best_option = options[0][1]
         self._write_command(best_option[1])
         for arg in best_option[2:]:
-            if isinstance(arg,(str,unicode,bytes)):
+            if isinstance(arg,(str,bytes)):
                 self._write_bytes(arg)
             else:
                 self._write_int(arg)
@@ -1297,9 +1292,9 @@ def _decode_offt(bytes):
     signed vint representation, but this is the format used by bsdiff4.
     """
     if sys.version_info[0] < 3:
-        bytes = map(ord,bytes)
+        bytes = list(map(ord,bytes))
     x = bytes[7] & 0x7F
-    for b in xrange(6,-1,-1):
+    for b in range(6,-1,-1):
         x = x * 256 + bytes[b]
     if bytes[7] & 0x80:
         x = -x
@@ -1318,8 +1313,8 @@ def _encode_offt(x):
         sign = 0
     bs = [0]*8
     bs[0] = x % 256
-    for b in xrange(7):
-        x = (x - bs[b]) / 256
+    for b in range(7):
+        x = old_div((x - bs[b]), 256)
         bs[b+1] = x % 256
     bs[7] |= sign
     if sys.version_info[0] < 3:
@@ -1430,8 +1425,11 @@ def main(args):
                 stream.close()
         if opts.zipped:
             really_rmtree(workdir)
- 
+
 
 if __name__ == "__main__":
     main(sys.argv[1:])
+
+
+
 

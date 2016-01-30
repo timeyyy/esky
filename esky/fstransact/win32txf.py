@@ -5,7 +5,8 @@
   esky.fstransact.win32fxt:  win32 transactional filesystem operations
 
 """
-
+from builtins import object
+from builtins import str
 
 import os
 import sys
@@ -46,7 +47,7 @@ ERROR_TRANSACTIONAL_OPEN_NOT_ALLOWED = 6832
 
 def unicode_path(path):
     if sys.version_info[0] < 3:
-        if not isinstance(path, unicode):
+        if not isinstance(path, str):
             path = path.decode(sys.getfilesystemencoding())
     return path
 
@@ -77,13 +78,13 @@ class FSTransaction(object):
             #  will fail with a transaction error if they're not supported.
             try:
                 self._move(self.root,self.root)
-            except WindowsError, e:
+            except WindowsError as e:
                 if e.winerror == ERROR_TRANSACTIONAL_OPEN_NOT_ALLOWED:
                     raise
             finally:
                 self.abort()
             self.trnid = CreateTransaction(None,0,0,0,0,None,"")
-        
+
     def _check_path(self,path):
         if self.root is not None:
             path = os.path.normpath(os.path.join(self.root,path))
@@ -142,7 +143,7 @@ class FSTransaction(object):
         for parent in reversed(parents[1:]):
             try:
                 CreateDirectoryTransacted(None,parent,0,self.trnid)
-            except WindowsError, e:
+            except WindowsError as e:
                 if e.winerror != 183:
                     raise
 
@@ -205,13 +206,13 @@ class FSTransaction(object):
                 self.remove(os.path.join(target,nm))
             try:
                 RemoveDirectoryTransacted(target,self.trnid)
-            except EnvironmentError, e:
+            except EnvironmentError as e:
                 if e.errno != errno.ENOENT:
                     raise
         else:
             try:
                 DeleteFileTransacted(target,self.trnid)
-            except EnvironmentError, e:
+            except EnvironmentError as e:
                 if e.errno != errno.ENOENT:
                     raise
 
@@ -220,5 +221,7 @@ class FSTransaction(object):
 
     def abort(self):
         RollbackTransaction(self.trnid)
+
+
 
 

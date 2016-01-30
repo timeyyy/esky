@@ -24,12 +24,16 @@ We also provide some handy utility functions:
 
     * has_root():      check whether current process has root privileges
     * can_get_root():  check whether current process may be able to get root
-    
+
 
 
 """
 
 from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import object
 
 import sys
 import time
@@ -43,10 +47,7 @@ def functools():
 
 @lazy_import
 def pickle():
-    try:
-       import cPickle as pickle
-    except ImportError:
-        import pickle
+    import pickle
     return pickle
 
 @lazy_import
@@ -189,7 +190,7 @@ class SudoProxy(object):
                                 args.append(t(pipe.read()))
                         try:
                             res = method(*args)
-                        except Exception, e:
+                        except Exception as e:
                             pipe.write(pickle.dumps((False,e)))
                         else:
                             if not iterator:
@@ -198,7 +199,7 @@ class SudoProxy(object):
                                 try:
                                     for item in res:
                                         pipe.write(pickle.dumps((True,item)))
-                                except Exception, e:
+                                except Exception as e:
                                     pipe.write(pickle.dumps((False,e)))
                                 else:
                                     SI = StopIteration
@@ -225,9 +226,9 @@ class SudoProxy(object):
         method = getattr(target,attr)
         pipe = self.__dict__["pipe"]
         if not _get_sudo_iterator(target,attr):
-            @functools.wraps(method.im_func)
+            @functools.wraps(method.__func__)
             def wrapper(*args):
-                pipe.write(method.im_func.func_name.encode("ascii"))
+                pipe.write(method.__func__.__name__.encode("ascii"))
                 for arg in args:
                     pipe.write(str(arg).encode("ascii"))
                 (success,result) = pickle.loads(pipe.read())
@@ -235,9 +236,9 @@ class SudoProxy(object):
                     raise result
                 return result
         else:
-            @functools.wraps(method.im_func)
+            @functools.wraps(method.__func__)
             def wrapper(*args):
-                pipe.write(method.im_func.func_name.encode("ascii"))
+                pipe.write(method.__func__.__name__.encode("ascii"))
                 for arg in args:
                     pipe.write(str(arg).encode("ascii"))
                 (success,result) = pickle.loads(pipe.read())
@@ -264,7 +265,7 @@ def allow_from_sudo(*argtypes,**kwds):
             ...
 
     Note that there are two aspects to transparently tunneling a method call
-    through the sudo proxy: allowing it via this decorator, and actually 
+    through the sudo proxy: allowing it via this decorator, and actually
     passing on the call to the proxy object.  I have no intention of making
     this any more hidden, because the fact that a method can have escalated
     privileges is something that that needs to be very obvious from the code.
@@ -331,4 +332,6 @@ def _get_oldstyle_mro(cls,seen):
         if base not in seen:
             for ancestor in _get_oldstyle_mro(base,seen):
                 yield ancestor
+
+
 

@@ -41,7 +41,7 @@ def freeze(dist):
         excludes.append("pypy")
     #  Freeze up the given scripts
     f = bbfreeze.Freezer(dist.freeze_dir,includes=includes,excludes=excludes)
-    for (nm,val) in options.iteritems():
+    for (nm,val) in list(options.items()):
         setattr(f,nm,val)
     f.addModule("esky")
     tdir = tempfile.mkdtemp()
@@ -251,3 +251,5 @@ def _chainload(target_dir):
       sys.exit(0)
 
 """
+
+

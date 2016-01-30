@@ -14,7 +14,9 @@ must be given the path to the top-level directory of the frozen app, and a
 """
 
 from __future__ import with_statement
-
+from __future__ import print_function
+from past.builtins import basestring
+from builtins import str
 
 import os
 import sys
@@ -32,7 +34,7 @@ from distutils.util import convert_path
 import esky.patch
 from esky.util import get_platform, create_zipfile, \
                       split_app_version, join_app_version, ESKY_CONTROL_DIR, \
-                      ESKY_APPDATA_DIR, really_rmtree
+                      ESKY_APPDATA_DIR, really_rmtree, freeze_future
 
 if sys.platform == "win32":
     from esky import winres
@@ -40,7 +42,7 @@ if sys.platform == "win32":
 
 try:
     from esky.bdist_esky import pypyc
-except ImportError, e:
+except ImportError as e:
     pypyc = None
     PYPYC_ERROR = e
     COMPILED_BOOTSTRAP_CACHE = None
@@ -87,7 +89,7 @@ except ImportError:
     _FREEZERS["cx_freeze"] = None
 
 
-class Executable(unicode):
+class Executable(str):
     """Class to hold information about a specific executable.
 
     This class provides a uniform way to specify extra meta-data about
@@ -102,13 +104,13 @@ class Executable(unicode):
 
     def __new__(cls,script,**kwds):
         if isinstance(script,basestring):
-            return unicode.__new__(cls,script)
+            return str.__new__(cls,script)
         else:
-            return unicode.__new__(cls,__file__)
+            return str.__new__(cls,__file__)
 
     def __init__(self,script,name=None,icon=None,gui_only=None,
-                      include_in_bootstrap_env=True,**kwds):
-        unicode.__init__(self)
+                 include_in_bootstrap_env=True,**kwds):
+        str.__init__(self)
         if isinstance(script,Executable):
             script = script.script
             if name is None:
@@ -157,7 +159,7 @@ class bdist_esky(Command):
     """Create a frozen application in 'esky' format.
 
     This distutils command can be used to freeze an application in the
-    format expected by esky.  It interprets the following standard 
+    format expected by esky.  It interprets the following standard
     distutils options:
 
        scripts:  list of scripts to freeze as executables;
@@ -211,7 +213,7 @@ class bdist_esky(Command):
         pre_zip_callback:  function to call just before starting to zip up
                            the frozen application; this is a good opportunity
                            to e.g. sign the resulting executables.
-    
+
     """
 
     description = "create a frozen app in 'esky' format"
@@ -281,7 +283,7 @@ class bdist_esky(Command):
                     break
             else:
                 err = "no supported freezer modules found"
-                err += " (try installing bbfreeze)"
+                err += " (try installing cxfreeze)"
                 raise RuntimeError(err)
         else:
             try:
@@ -320,11 +322,13 @@ class bdist_esky(Command):
         self._run_initialise_dirs()
         if self.pre_freeze_callback is not None:
             self.pre_freeze_callback(self)
+        freeze_future(self)
         self._run_freeze_scripts()
         if self.pre_zip_callback is not None:
             self.pre_zip_callback(self)
         self._generate_filelist_manifest()
         self._run_create_zipfile()
+
 
     def _run_initialise_dirs(self):
         """Create the dirs into which to freeze the app."""
@@ -374,10 +378,10 @@ class bdist_esky(Command):
                 self.freezer_module.zipit(self,self.bootstrap_dir,zfname)
             else:
                 if self.compress == 'zip':
-                    print "zipping up the esky with compression"
+                    print("zipping up the esky with compression")
                     create_zipfile(self.bootstrap_dir,zfname,compress=True)
                 elif self.compress == 'ZIP':
-                    print "zipping up the esky without compression"
+                    print("zipping up the esky without compression")
                     create_zipfile(self.bootstrap_dir,zfname,compress=False)
             # TODO should this always be deleted?? i.e not only on compression
             really_rmtree(self.bootstrap_dir)
@@ -505,7 +509,7 @@ class bdist_esky(Command):
                 for src in sources:
                     src = convert_path(src)
                     yield (src,os.path.join(dst,os.path.basename(src)))
- 
+
     def get_package_data(self):
         """Yield (source,destination) tuples for package data files.
 
@@ -514,7 +518,7 @@ class bdist_esky(Command):
         or equivalent, alongside the python files for that package.
         """
         if self.distribution.package_data:
-            for pkg,data in self.distribution.package_data.iteritems():
+            for pkg,data in self.distribution.package_data.items():
                 pkg_dir = self.get_package_dir(pkg)
                 pkg_path = pkg.replace(".","/")
                 if isinstance(data,basestring):
@@ -609,15 +613,16 @@ class bdist_esky(Command):
         except EnvironmentError:
             return None
         manifest = minidom.parseString(manifest_str)
+        # import pdb;pdb.set_trace()
         for assembly in manifest.getElementsByTagName("assemblyIdentity"):
             name = assembly.attributes["name"].value
             if name.startswith("Microsoft") and name.endswith("CRT"):
-                version = assembly.attributes["version"].value 
-                pubkey = assembly.attributes["publicKeyToken"].value 
+                version = assembly.attributes["version"].value
+                pubkey = assembly.attributes["publicKeyToken"].value
                 return (name,version,pubkey)
         return None
-        
-    
+
+
     @staticmethod
     def _find_msvcrt_manifest_files(name):
         """Search the system for candidate MSVCRT manifest files.
@@ -740,7 +745,7 @@ class bdist_esky(Command):
             self.copy_tree(srcpath,dstpath)
         else:
             if not os.path.isdir(os.path.dirname(dstpath)):
-               self.mkpath(os.path.dirname(dstpath))
+                self.mkpath(os.path.dirname(dstpath))
             self.copy_file(srcpath,dstpath)
         self.add_to_bootstrap_manifest(dstpath)
         return dstpath
@@ -777,11 +782,11 @@ class bdist_esky_patch(Command):
     """
 
     user_options = [
-                    ('dist-dir=', 'd',
-                     "directory to put final built distributions in"),
-                    ('from-version=', None,
-                     "version against which to produce patch"),
-                   ]
+        ('dist-dir=', 'd',
+         "directory to put final built distributions in"),
+        ('from-version=', None,
+         "version against which to produce patch"),
+    ]
 
     def initialize_options(self):
         self.dist_dir = None
@@ -816,7 +821,7 @@ class bdist_esky_patch(Command):
             target_version = split_app_version(target_vdir)[1]
             patchfile = vdir+".from-%s.patch" % (target_version,)
             patchfile = os.path.join(self.dist_dir,patchfile)
-            print "patching", target_esky, "against", source_esky, "=>", patchfile
+            print("patching", target_esky, "against", source_esky, "=>", patchfile)
             if not self.dry_run:
                 try:
                     esky.patch.main(["-Z","diff",source_esky,target_esky,patchfile])
@@ -831,6 +836,3 @@ distutils.command.__all__.append("bdist_esky")
 distutils.command.__all__.append("bdist_esky_patch")
 sys.modules["distutils.command.bdist_esky"] = sys.modules["esky.bdist_esky"]
 sys.modules["distutils.command.bdist_esky_patch"] = sys.modules["esky.bdist_esky"]
-
-
-

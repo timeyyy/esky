@@ -5,24 +5,25 @@
   esky.bdist_esky.f_cxfreeze:  bdist_esky support for cx_Freeze
 
 """
-
+from builtins import range
 
 import os
 import sys
 import inspect
 import zipfile
 import distutils
+import shutil
+
 
 if sys.platform == "win32":
     from esky import winres
-
 
 import cx_Freeze
 import cx_Freeze.hooks
 INITNAME = "cx_Freeze__init__"
 
 import esky
-from esky.util import is_core_dependency, compile_to_bytecode
+from esky.util import is_core_dependency, compile_to_bytecode, preserve_cwd
 
 
 def freeze(dist):
@@ -30,7 +31,7 @@ def freeze(dist):
     includes = dist.includes
     excludes = dist.excludes
     options = dist.freezer_options
-    #  Merge in any encludes/excludes given in freezer_options
+    #  Merge in any includes/excludes given in freezer_options
     for inc in options.pop("includes",()):
         includes.append(inc)
     for exc in options.pop("excludes",()):
@@ -47,7 +48,7 @@ def freeze(dist):
     cx_Freeze.hooks.load_distutils = load_distutils
     #  Build kwds arguments out of the given freezer opts.
     kwds = {}
-    for (nm,val) in options.iteritems():
+    for (nm,val) in options.items():
         kwds[_normalise_opt_name(nm)] = val
     kwds["includes"] = includes
     kwds["excludes"] = excludes
@@ -63,6 +64,7 @@ def freeze(dist):
     #  Freeze up the executables
     f = cx_Freeze.Freezer(executables,**kwds)
     f.Freeze()
+    freeze_future_fix(f, **kwds)
     #  Copy data files into the freeze dir
     for (src,dst) in dist.get_data_files():
         dst = os.path.join(dist.freeze_dir,dst)
@@ -123,11 +125,11 @@ def freeze(dist):
         code_source.append(dist.get_bootstrap_code())
         code_source.append("bootstrap()")
         code_source = "\n".join(code_source)
-        
+
         maincode = compile_to_bytecode(code_source, INITNAME+".py")
         eskycode = compile_to_bytecode("", "esky/__init__.py")
         eskybscode = compile_to_bytecode("", "esky/bootstrap.py")
-        
+
         #  Copy any core dependencies
         if "fcntl" not in sys.builtin_module_names:
             for nm in os.listdir(dist.freeze_dir):
@@ -136,13 +138,13 @@ def freeze(dist):
         for nm in os.listdir(dist.freeze_dir):
             if is_core_dependency(nm):
                 dist.copy_to_bootstrap_env(nm)
-                
+
         #  Copy the loader program for each script into the bootstrap env, and
         #  append the bootstrapping code to it as a zipfile.
         for exe in dist.get_executables(normalise=False):
             if not exe.include_in_bootstrap_env:
                 continue
-            
+
             exepath = dist.copy_to_bootstrap_env(exe.name)
             if not dist.detached_bootstrap_library:
                 #append library to the bootstrap exe.
@@ -159,6 +161,51 @@ def freeze(dist):
             bslib.close()
 
 
+#TODO do i need this for py2exe? and py2app?
+@preserve_cwd
+def freeze_future_fix(freezer, **options):
+    '''
+    if a library uses open() on a file that now is moved in our library.zip, it will fail
+    we unzip the package data and library so that it now works
+    '''
+    class Unnest(Exception):
+        '''This is raised to exit out of a nested loop'''
+        pass
+
+    modules_to_unzip = ('lib2to3',)
+    zip_archive_name = 'library.zip'
+    os.chdir(freezer.targetDir)
+    archive = zipfile.ZipFile(zip_archive_name)
+    for file in archive.namelist():
+        for bad_module in modules_to_unzip:
+            if file.startswith(bad_module + '/'):
+                archive.extract(file, os.getcwd())
+    archive.close()
+    # now copy over any data files as well (they had problems getting sucked in from
+    # our freezer)
+    if os.name == 'nt':
+        data_path = os.path.join(sys.exec_prefix, 'Lib', 'lib2to3')
+    elif 'linux' in sys.platform:
+        try:
+            # locating the folder path on linux...
+            for folder in sys.path:
+                if folder:
+                    for file in os.listdir(folder):
+                        for module in modules_to_unzip:
+                            if file == module:
+                                data_path = os.path.join(folder, module)
+                                raise Unnest
+        except Unnest:
+            pass
+        else:
+            raise Exception('One of our required modules could not be found')
+
+    data_files = (('Grammar.txt', 'PatternGrammar.txt'),)
+    for datas, module in zip(data_files, modules_to_unzip):
+        for data in datas:
+            shutil.copy(os.path.join(data_path, data), os.path.join(module, data))
+
+
 def _normalise_opt_name(nm):
     """Normalise option names for cx_Freeze.
 
@@ -166,7 +213,7 @@ def _normalise_opt_name(nm):
     them converted to the "optName" format used internally by cx_Freeze.
     """
     bits = nm.split("-")
-    for i in xrange(1,len(bits)):
+    for i in range(1,len(bits)):
         if bits[i]:
             bits[i] = bits[i][0].upper() + bits[i][1:]
     return "".join(bits)
@@ -296,5 +343,7 @@ def _chainload(target_dir):
       sys.exit(0)
 
 """
+
+
 
 

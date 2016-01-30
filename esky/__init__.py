@@ -20,6 +20,11 @@ See https://github.com/cloudmatrix/esky/ for more information:
 
 from __future__ import with_statement
 from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import next
+from past.builtins import basestring
+from builtins import object
 
 __ver_major__ = 0
 __ver_minor__ = 9
@@ -87,10 +92,7 @@ def base64():
 
 @lazy_import
 def pickle():
-    try:
-        import cPickle as pickle
-    except ImportError:
-        import pickle
+    import pickle
     return pickle
 
 
@@ -251,7 +253,7 @@ class Esky(object):
         #  Try to make the "locked" directory.
         try:
             os.mkdir(lockdir)
-        except OSError, e:
+        except OSError as e:
             if e.errno != errno.EEXIST:
                 raise
             #  Is it stale?  If so, break it and try again.
@@ -266,7 +268,7 @@ class Esky(object):
                     return self.lock(num_retries+1)
                 else:
                     raise EskyLockedError
-            except OSError, e:
+            except OSError as e:
                 if e.errno not in (errno.ENOENT, errno.ENOTDIR,):
                     raise
                 return self.lock(num_retries+1)
@@ -365,7 +367,7 @@ class Esky(object):
                     except Exception:
                         act = actions.throw(*sys.exc_info())
                     else:
-                        act = actions.next()
+                        act = next(actions)
             except StopIteration:
                 return success
         finally:
@@ -580,7 +582,7 @@ class Esky(object):
                 os.rmdir(fullpath)
             else:
                 os.unlink(fullpath)
-        except EnvironmentError, e:
+        except EnvironmentError as e:
             if e.errno not in self._errors_to_ignore:
                 raise
             return False
@@ -629,8 +631,8 @@ class Esky(object):
                         raise
                     try:
                         self.get_root()
-                    except Exception, e:
-                        raise exc_type, exc_value, exc_traceback
+                    except Exception as e:
+                        raise exc_type(exc_value).with_traceback(exc_traceback)
                     else:
                         got_root = True
                         self._do_auto_update(version, callback)
@@ -646,13 +648,13 @@ class Esky(object):
                     raise
                 try:
                     self.get_root()
-                except Exception, e:
-                    raise exc_type, exc_value, exc_traceback
+                except Exception as e:
+                    raise exc_type(exc_value).with_traceback(exc_traceback)
                 else:
                     got_root = True
                     callback({"status": "cleaning up"})
                     cleaned = self.cleanup()
-        except Exception, e:
+        except Exception as e:
             callback({"status": "error", "exception": e})
             raise
         else:
@@ -772,7 +774,7 @@ class Esky(object):
             vsdir = os.path.join(self.appdir, ESKY_APPDATA_DIR)
             try:
                 os.mkdir(vsdir)
-            except EnvironmentError, e:
+            except EnvironmentError as e:
                 if e.errno not in (errno.EEXIST,):
                     raise
             else:
@@ -876,13 +878,13 @@ class Esky(object):
             else:
                 try:
                     f = open(lockfile, "r")
-                except EnvironmentError, e:
+                except EnvironmentError as e:
                     if e.errno != errno.ENOENT:
                         raise
                 else:
                     try:
                         fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                    except EnvironmentError, e:
+                    except EnvironmentError as e:
                         if e.errno not in (errno.EACCES, errno.EAGAIN,):
                             raise
                         msg = "version in use: %s" % (version,)

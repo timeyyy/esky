@@ -1,10 +1,10 @@
+from builtins import object
 
 #  Entry point for testing an esky install.
 
 import os
 import sys
 import time
-import errno
 
 
 import esky
@@ -67,10 +67,10 @@ else:
             if hasattr(proc,"terminate"):
                 proc.terminate()
             else:
-               if sys.platform == "win32":
-                  ctypes.windll.kernel32.TerminateProcess(int(proc._handle),-1)
-               else:
-                  os.kill(proc.pid,signal.SIGTERM)
+                if sys.platform == "win32":
+                    ctypes.windll.kernel32.TerminateProcess(int(proc._handle),-1)
+                else:
+                    os.kill(proc.pid,signal.SIGTERM)
             proc.wait()
     spawn_busy_loop(app)
 
@@ -114,3 +114,4 @@ else:
     assert False, "in-use version was not locked"
 
 open(os.path.join(app.appdir,"tests-completed"),"w").close()
+

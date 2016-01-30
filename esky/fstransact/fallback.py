@@ -5,6 +5,7 @@
   esky.fstransact.fallback: fallback implementation for FSTransaction
 
 """
+from builtins import object
 
 import os
 import sys

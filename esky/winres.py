@@ -11,6 +11,10 @@ under Windows.
 """
 
 from __future__ import with_statement
+from __future__ import division
+from past.builtins import basestring
+from past.utils import old_div
+from builtins import str
 
 import os
 import sys
@@ -54,7 +58,7 @@ except AttributeError:
 def get_loaded_modules():
     """Iterator over the currently-loaded modules of the current process.
 
-    This is a skinny little wrapper around the EnumProcessModules and 
+    This is a skinny little wrapper around the EnumProcessModules and
     GetModuleFileName functions.
     """
     sz = -1
@@ -69,7 +73,7 @@ def get_loaded_modules():
                 raise ctypes.WinError()
         nmbuf = ctypes.create_unicode_buffer(300)
         i = 0
-        while i < needed.value / msz:
+        while i < old_div(needed.value, msz):
             hmod = buf[i]
             i += 1
             if not k32.GetModuleFileNameW(hmod,byref(nmbuf),300):
@@ -77,7 +81,7 @@ def get_loaded_modules():
             yield nmbuf.value
     finally:
         k32.CloseHandle(proc)
- 
+
 
 
 def find_resource(filename_or_handle,res_type,res_id,res_lang=None):
@@ -88,7 +92,7 @@ def find_resource(filename_or_handle,res_type,res_id,res_lang=None):
 
     Currently this relies on the kernel32.LockResource function returning
     a pointer based at the module handle; ideally we'd do our own parsing.
-    """ 
+    """
     tdir = None
     free_library = False
     try:
@@ -96,7 +100,7 @@ def find_resource(filename_or_handle,res_type,res_id,res_lang=None):
             res_lang = _DEFAULT_RESLANG
         if isinstance(filename_or_handle,basestring):
             filename = filename_or_handle
-            if not isinstance(filename,unicode):
+            if not isinstance(filename,str):
                 filename = filename.decode(sys.getfilesystemencoding())
             #  See if we already have that file loaded as a module.
             #  In this case it won't be in memory as one big block and we
@@ -137,7 +141,7 @@ def find_resource(filename_or_handle,res_type,res_id,res_lang=None):
             for nm in os.listdir(tdir):
                 os.unlink(os.path.join(tdir,nm))
             os.rmdir(tdir)
-    
+
 
 def load_resource(filename_or_handle,res_type,res_id,res_lang=_DEFAULT_RESLANG):
     """Load a resource from the given filename or module handle.
@@ -148,7 +152,7 @@ def load_resource(filename_or_handle,res_type,res_id,res_lang=_DEFAULT_RESLANG):
     """
     if isinstance(filename_or_handle,basestring):
         filename = filename_or_handle
-        if not isinstance(filename,unicode):
+        if not isinstance(filename,str):
             filename = filename.decode(sys.getfilesystemencoding())
         l_handle = k32.LoadLibraryExW(filename,None,LOAD_LIBRARY_AS_DATAFILE)
         if not l_handle:
@@ -184,7 +188,7 @@ def add_resource(filename,resource,res_type,res_id,res_lang=_DEFAULT_RESLANG):
     to be added, along with the "res_lang" argument if given.  The contents
     of the specified resource must be provided as a string.
     """
-    if not isinstance(filename,unicode):
+    if not isinstance(filename,str):
         filename = filename.decode(sys.getfilesystemencoding())
     l_handle = k32.BeginUpdateResourceW(filename,0)
     if not l_handle:
@@ -194,7 +198,7 @@ def add_resource(filename,resource,res_type,res_id,res_lang=_DEFAULT_RESLANG):
         raise ctypes.WinError()
     if not k32.EndUpdateResourceW(l_handle,0):
         raise ctypes.WinError()
- 
+
 
 def get_app_manifest(filename_or_handle=None):
     """Get the default application manifest for frozen Python apps.
@@ -211,7 +215,7 @@ def get_app_manifest(filename_or_handle=None):
 
 COMMON_SAFE_RESOURCES = ((RT_VERSION,1,0),(RT_ICON,0,0),(RT_ICON,1,0),
                          (RT_ICON,2,0),(RT_GROUP_ICON,1,0),)
-                         
+
 
 def copy_safe_resources(source,target):
     """Copy "safe" exe resources from one executable to another.
@@ -252,7 +256,7 @@ def is_safe_to_overwrite(source,target):
             s_loc = find_resource(source,rtype,rid,rlang)
         except WindowsError:
             s_loc = None
-        try: 
+        try:
             t_loc = find_resource(target,rtype,rid,rlang)
         except WindowsError:
             t_loc = None
@@ -269,5 +273,6 @@ def is_safe_to_overwrite(source,target):
                 return False
     #  Looks safe to me!
     return True
+
 
 
