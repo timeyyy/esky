@@ -251,7 +251,7 @@ class Esky(object):
         #  Try to make the "locked" directory.
         try:
             os.mkdir(lockdir)
-        except OSError, e:
+        except OSError as e:
             if e.errno != errno.EEXIST:
                 raise
             #  Is it stale?  If so, break it and try again.
@@ -266,7 +266,7 @@ class Esky(object):
                     return self.lock(num_retries+1)
                 else:
                     raise EskyLockedError
-            except OSError, e:
+            except OSError as e:
                 if e.errno not in (errno.ENOENT, errno.ENOTDIR,):
                     raise
                 return self.lock(num_retries+1)
@@ -365,7 +365,7 @@ class Esky(object):
                     except Exception:
                         act = actions.throw(*sys.exc_info())
                     else:
-                        act = actions.next()
+                        act = next(actions)
             except StopIteration:
                 return success
         finally:
@@ -580,7 +580,7 @@ class Esky(object):
                 os.rmdir(fullpath)
             else:
                 os.unlink(fullpath)
-        except EnvironmentError, e:
+        except EnvironmentError as e:
             if e.errno not in self._errors_to_ignore:
                 raise
             return False
@@ -629,7 +629,7 @@ class Esky(object):
                         raise
                     try:
                         self.get_root()
-                    except Exception, e:
+                    except Exception as e:
                         raise exc_type, exc_value, exc_traceback
                     else:
                         got_root = True
@@ -646,13 +646,13 @@ class Esky(object):
                     raise
                 try:
                     self.get_root()
-                except Exception, e:
+                except Exception as e:
                     raise exc_type, exc_value, exc_traceback
                 else:
                     got_root = True
                     callback({"status": "cleaning up"})
                     cleaned = self.cleanup()
-        except Exception, e:
+        except Exception as e:
             callback({"status": "error", "exception": e})
             raise
         else:
@@ -772,7 +772,7 @@ class Esky(object):
             vsdir = os.path.join(self.appdir, ESKY_APPDATA_DIR)
             try:
                 os.mkdir(vsdir)
-            except EnvironmentError, e:
+            except EnvironmentError as e:
                 if e.errno not in (errno.EEXIST,):
                     raise
             else:
@@ -876,13 +876,13 @@ class Esky(object):
             else:
                 try:
                     f = open(lockfile, "r")
-                except EnvironmentError, e:
+                except EnvironmentError as e:
                     if e.errno != errno.ENOENT:
                         raise
                 else:
                     try:
                         fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                    except EnvironmentError, e:
+                    except EnvironmentError as e:
                         if e.errno not in (errno.EACCES, errno.EAGAIN,):
                             raise
                         msg = "version in use: %s" % (version,)

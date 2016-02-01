@@ -105,7 +105,7 @@ def freeze(dist):
         for nm in ("Python.framework","lib"+pydir+".dylib",):
             try:
                 copy_to_bootstrap_env("Contents/Frameworks/" + nm)
-            except Exception, e:
+            except Exception as e:
                 #  Distutils does its own crazy exception-raising which I
                 #  have no interest in examining right now.  Eventually this
                 #  guard will be more conservative.

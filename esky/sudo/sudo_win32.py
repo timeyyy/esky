@@ -170,7 +170,7 @@ def can_get_root():
             try:
                 cls = TokenLinkedToken
                 GetTokenInformation(token,cls,byref(lToken),sizeof(lToken),byref(sz))
-            except WindowsError, e:
+            except WindowsError as e:
                 if e.winerror == ERROR_NO_SUCH_LOGON_SESSION:
                     return False
                 elif e.winerror == ERROR_PRIVILEGE_NOT_HELD:

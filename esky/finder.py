@@ -131,7 +131,7 @@ class DefaultVersionFinder(VersionFinder):
             for target in (updir,workdir):
                 try:
                     os.mkdir(target)
-                except OSError, e:
+                except OSError as e:
                     if e.errno not in (errno.EEXIST,183):
                         raise
                 else:
@@ -233,7 +233,7 @@ class DefaultVersionFinder(VersionFinder):
                         else:
                             yield status
                 self._prepare_version(app,version,local_path)
-            except (PatchError,EskyVersionError,EnvironmentError), e:
+            except (PatchError,EskyVersionError,EnvironmentError) as e:
                 yield {"status":"retrying","size":None,"exception":e}
         yield {"status":"ready","path":name}
 
@@ -307,7 +307,7 @@ class DefaultVersionFinder(VersionFinder):
                     #  Copy the current version across and go from there.
                     try:
                         self._copy_best_version(app,uppath)
-                    except EnvironmentError, e:
+                    except EnvironmentError as e:
                         self.version_graph.remove_all_links(path[0][1])
                         err = "couldn't copy current version: %s" % (e,)
                         raise PatchError(err)
@@ -335,7 +335,7 @@ class DefaultVersionFinder(VersionFinder):
                             try:
                                 with open(patchfile,"rb") as f:
                                     apply_patch(uppath,f)
-                            except EnvironmentError, e:
+                            except EnvironmentError as e:
                                 if e.errno not in (errno.ENOENT,):
                                     raise
                                 if not path[0][0].endswith(".patch"):
@@ -416,7 +416,7 @@ class DefaultVersionFinder(VersionFinder):
             dest = os.path.join(uppath,ESKY_APPDATA_DIR)
         try:
             os.mkdir(dest)
-        except OSError, e:
+        except OSError as e:
             if e.errno not in (errno.EEXIST,183):
                 raise
         shutil.copytree(source,os.path.join(dest,best_vdir))

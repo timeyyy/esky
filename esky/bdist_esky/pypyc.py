@@ -18,7 +18,7 @@ import pypy.translator.goal.translate
 
 try:
     import pypy.rlib.clibffi
-except (ImportError,AttributeError,), e:
+except (ImportError,AttributeError,) as e:
     msg = "Compiling bootstrap exes requires PyPy v1.5 or later"
     msg += " [error: %s]" % (e,)
     raise ImportError(msg)

@@ -125,7 +125,7 @@ elif "nt" in sys.builtin_module_names:
             tdir = None
         if tdir:
             try:
-                nt.mkdir(pathjoin(tdir,"esky-slave-procs"),0600)
+                nt.mkdir(pathjoin(tdir,"esky-slave-procs"),0o600)
             except EnvironmentError:
                 pass
             if exists(pathjoin(tdir,"esky-slave-procs")):
@@ -134,7 +134,7 @@ elif "nt" in sys.builtin_module_names:
                     tfilenm = "slave-%d.%d.txt" % (nt.getpid(),i,)
                     tfilenm = pathjoin(tdir,"esky-slave-procs",tfilenm)
                     try:
-                        os_open(tfilenm,flags,0600)
+                        os_open(tfilenm,flags,0o600)
                         args.insert(1,tfilenm)
                         args.insert(1,"--esky-slave-proc")
                         break
@@ -268,7 +268,7 @@ def exists(path):
     """Local re-implementation of os.path.exists."""
     try:
         stat(path)
-    except EnvironmentError, e:
+    except EnvironmentError as e:
         # TODO: how to get the errno under RPython?
         if not __rpython__:
             if e.errno not in (errno.ENOENT,errno.ENOTDIR,errno.ESRCH,):
@@ -408,7 +408,7 @@ def _chainload(target_dir):
         try:
             execv(target_exe,[target_exe] + sys.argv[1:])
             return
-        except EnvironmentError, exc_value:
+        except EnvironmentError as exc_value:
             #  Careful, RPython lacks a usable exc_info() function.
             exc_type,_,traceback = sys.exc_info()
             if not __rpython__:
@@ -675,7 +675,7 @@ if __rpython__:
              sys.argv = argv
              try:
                  main()
-             except SystemExit, e:
+             except SystemExit as e:
                  exit_code = _exit_code[0]
              return exit_code
         return entry_point, None

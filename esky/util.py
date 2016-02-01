@@ -44,7 +44,7 @@ def lazy_import(func):
         namespace = None
     else:
         namespace = f.f_locals
-    return _LazyImport(func.func_name,func,namespace)
+    return _LazyImport(func.__name__,func,namespace)
 
 
 class _LazyImport(object):
@@ -207,7 +207,7 @@ def pairwise(iterable):
     """Iterator over pairs of elements from the given iterable."""
     a,b = itertools.tee(iterable)
     try:
-        b.next()
+        next(b)
     except StopIteration:
         pass
     return itertools.izip(a,b)
@@ -217,7 +217,7 @@ def common_prefix(iterables):
     """Find the longest common prefix of a series of iterables."""
     iterables = iter(iterables)
     try:
-        prefix = iterables.next()
+        prefix = next(iterables)
     except StopIteration:
         raise ValueError("at least one iterable is required")
     for item in iterables:
@@ -296,7 +296,7 @@ def extract_zipfile(source,target,name_filter=None):
             if not os.path.isdir(os.path.dirname(outfilenm)):
                 os.makedirs(os.path.dirname(outfilenm))
             zinfo = zf.getinfo(nm)
-            if hex(zinfo.external_attr) == 2716663808L: # it's a symlink
+            if hex(zinfo.external_attr) == 2716663808: # it's a symlink
                 target = zf.read(nm)
                 os.symlink(target, outfilenm)
                 continue
@@ -309,7 +309,7 @@ def extract_zipfile(source,target,name_filter=None):
                     outfile.close()
             finally:
                 infile.close()
-            mode = zinfo.external_attr >> 16L
+            mode = zinfo.external_attr >> 16
             if mode:
                 os.chmod(outfilenm,mode)
     finally:
@@ -403,7 +403,7 @@ def create_zipfile(source,target,get_zipinfo=None,members=None,compress=None):
             else: # isinstance(zinfo,zipfile.ZipInfo)
                 pass
             zinfo.create_system = 3
-            zinfo.external_attr = 2716663808L # symlink: 0xA1ED0000
+            zinfo.external_attr = 2716663808 # symlink: 0xA1ED0000
             zf.writestr(zinfo,dest)
         else: # not a symlink
             if zinfo is None:
@@ -500,7 +500,7 @@ def is_locked_version_dir(vdir):
         f = open(lockfile,"r")
         try:
             fcntl.flock(f,fcntl.LOCK_EX|fcntl.LOCK_NB)
-        except EnvironmentError, e:
+        except EnvironmentError as e:
             if e.errno not in (errno.EACCES,errno.EAGAIN,):
                 raise
             return True
@@ -523,7 +523,7 @@ def really_rename(source,target):
         for _ in xrange(100):
             try:
                 os.rename(source,target)
-            except WindowsError, e:
+            except WindowsError as e:
                 if e.errno not in (errno.EACCES,):
                     raise
                 time.sleep(0.01)
@@ -551,7 +551,7 @@ def really_rmtree(path):
         for _ in xrange(100):
             try:
                 shutil.rmtree(path)
-            except WindowsError, e:
+            except WindowsError as e:
                 if e.errno in (errno.ENOTEMPTY,errno.EACCES,):
                     time.sleep(0.01)
                 elif e.errno == errno.ENOENT:

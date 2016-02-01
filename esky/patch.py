@@ -52,6 +52,7 @@ already have the corresponding zip files.
 """
 
 from __future__ import with_statement
+from __future__ import print_function
 try:
     bytes = bytes
 except NameError:
@@ -485,14 +486,14 @@ class Patcher(object):
         """Read an integer from the command stream."""
         i = _read_vint(self.commands)
         if self.dry_run:
-            print "  ", i
+            print("  ", i)
         return i
 
     def _read_command(self):
         """Read the next command to be processed."""
         cmd = _read_vint(self.commands)
         if self.dry_run:
-            print _COMMANDS[cmd]
+            print(_COMMANDS[cmd])
         return cmd
 
     def _read_bytes(self):
@@ -502,7 +503,7 @@ class Patcher(object):
         if len(bytes) != l:
             raise PatchError("corrupted bytestring")
         if self.dry_run:
-            print "   [%s bytes]" % (len(bytes),)
+            print("   [%s bytes]" % (len(bytes),))
         return bytes
 
     def _read_path(self):
@@ -513,7 +514,7 @@ class Patcher(object):
             raise PatchError("corrupted path")
         path = bytes.decode("utf-8")
         if self.dry_run:
-            print "  ", path
+            print("  ", path)
         return path
 
     def _check_begin_patch(self):

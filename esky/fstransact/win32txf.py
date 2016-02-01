@@ -77,7 +77,7 @@ class FSTransaction(object):
             #  will fail with a transaction error if they're not supported.
             try:
                 self._move(self.root,self.root)
-            except WindowsError, e:
+            except WindowsError as e:
                 if e.winerror == ERROR_TRANSACTIONAL_OPEN_NOT_ALLOWED:
                     raise
             finally:
@@ -142,7 +142,7 @@ class FSTransaction(object):
         for parent in reversed(parents[1:]):
             try:
                 CreateDirectoryTransacted(None,parent,0,self.trnid)
-            except WindowsError, e:
+            except WindowsError as e:
                 if e.winerror != 183:
                     raise
 
@@ -205,13 +205,13 @@ class FSTransaction(object):
                 self.remove(os.path.join(target,nm))
             try:
                 RemoveDirectoryTransacted(target,self.trnid)
-            except EnvironmentError, e:
+            except EnvironmentError as e:
                 if e.errno != errno.ENOENT:
                     raise
         else:
             try:
                 DeleteFileTransacted(target,self.trnid)
-            except EnvironmentError, e:
+            except EnvironmentError as e:
                 if e.errno != errno.ENOENT:
                     raise
 

@@ -2,6 +2,7 @@
 #  All rights reserved; available under the terms of the BSD License.
 
 from __future__ import with_statement
+from __future__ import print_function
 
 import sys
 import os
@@ -269,7 +270,7 @@ class TestEsky(unittest.TestCase):
             esky.patch.apply_patch(uzdir,f)
         really_rmtree(uzdir)
         #  Serve the updates at LOCAL_HTTP_PORT set in esky.util
-        print "running local update server"
+        print("running local update server")
         try:
             server = HTTPServer(("localhost",LOCAL_HTTP_PORT),SimpleHTTPRequestHandler)
         except Exception:
@@ -299,17 +300,17 @@ class TestEsky(unittest.TestCase):
                 cmd1 = os.path.join(deploydir,"script1")
                 cmd2 = os.path.join(deploydir,"script2")
                 cmd3 = os.path.join(deploydir,"script3")
-        print "spawning eskytester script1", options["bdist_esky"]["freezer_module"]
+        print("spawning eskytester script1", options["bdist_esky"]["freezer_module"])
         os.unlink(os.path.join(tdir,"dist","eskytester-0.1.%s.zip"%(platform,)))
         p = subprocess.Popen(cmd1)
         assert p.wait() == 0
         os.unlink(os.path.join(appdir,"tests-completed"))
-        print "spawning eskytester script2"
+        print("spawning eskytester script2")
         os.unlink(os.path.join(tdir,"dist","eskytester-0.2.%s.zip"%(platform,)))
         p = subprocess.Popen(cmd2)
         assert p.wait() == 0
         os.unlink(os.path.join(appdir,"tests-completed"))
-        print "spawning eskytester script3"
+        print("spawning eskytester script3")
         p = subprocess.Popen(cmd3)
         assert p.wait() == 0
         os.unlink(os.path.join(appdir,"tests-completed"))
@@ -347,7 +348,7 @@ class TestEsky(unittest.TestCase):
             def runme():
                 try:
                     e.lock()
-                except Exception, err:
+                except Exception as err:
                     errors.append(err)
                 else:
                     locked.append(e)
@@ -381,7 +382,7 @@ class TestEsky(unittest.TestCase):
         def run1():
             try:
                 e1.lock()
-            except Exception, err:
+            except Exception as err:
                 errors.append(err)
             trigger1.set()
             trigger2.wait()
@@ -391,7 +392,7 @@ class TestEsky(unittest.TestCase):
                 e2.lock()
             except esky.EskyLockedError:
                 pass
-            except Exception, err:
+            except Exception as err:
                 errors.append(err)
             else:
                 errors.append("locked when I shouldn't have")
@@ -399,7 +400,7 @@ class TestEsky(unittest.TestCase):
             time.sleep(0.5)
             try:
                 e2.lock()
-            except Exception, err:
+            except Exception as err:
                 errors.append(err)
             trigger2.set()
         t1 = threading.Thread(target=run1)
@@ -803,7 +804,7 @@ class TestPatch(unittest.TestCase):
         source = "example-app-0.1.tar.gz"
         target = "example-app-0.2.tar.gz"
         src_dir, tgt_dir = self._extract(source, target)
-        print src_dir, tgt_dir
+        print(src_dir, tgt_dir)
 
         # The two directory structures should initially be different.
         self.assertNotEquals(esky.patch.calculate_patch_digest(src_dir),

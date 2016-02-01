@@ -189,7 +189,7 @@ class SudoProxy(object):
                                 args.append(t(pipe.read()))
                         try:
                             res = method(*args)
-                        except Exception, e:
+                        except Exception as e:
                             pipe.write(pickle.dumps((False,e)))
                         else:
                             if not iterator:
@@ -198,7 +198,7 @@ class SudoProxy(object):
                                 try:
                                     for item in res:
                                         pipe.write(pickle.dumps((True,item)))
-                                except Exception, e:
+                                except Exception as e:
                                     pipe.write(pickle.dumps((False,e)))
                                 else:
                                     SI = StopIteration
@@ -225,9 +225,9 @@ class SudoProxy(object):
         method = getattr(target,attr)
         pipe = self.__dict__["pipe"]
         if not _get_sudo_iterator(target,attr):
-            @functools.wraps(method.im_func)
+            @functools.wraps(method.__func__)
             def wrapper(*args):
-                pipe.write(method.im_func.func_name.encode("ascii"))
+                pipe.write(method.__func__.__name__.encode("ascii"))
                 for arg in args:
                     pipe.write(str(arg).encode("ascii"))
                 (success,result) = pickle.loads(pipe.read())
@@ -235,9 +235,9 @@ class SudoProxy(object):
                     raise result
                 return result
         else:
-            @functools.wraps(method.im_func)
+            @functools.wraps(method.__func__)
             def wrapper(*args):
-                pipe.write(method.im_func.func_name.encode("ascii"))
+                pipe.write(method.__func__.__name__.encode("ascii"))
                 for arg in args:
                     pipe.write(str(arg).encode("ascii"))
                 (success,result) = pickle.loads(pipe.read())

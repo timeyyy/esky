@@ -52,7 +52,7 @@ def FSTransaction(root=None):
     if sys.platform == "win32" and _win32txf:
         try:
             return _win32txf.FSTransaction(root)
-        except WindowsError, e:
+        except WindowsError as e:
             if e.winerror != _win32txf.ERROR_TRANSACTIONAL_OPEN_NOT_ALLOWED:
                 raise
     #  If all else fails, use the fallback implementation.
