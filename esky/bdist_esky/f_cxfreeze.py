@@ -207,6 +207,8 @@ def _chainload(target_dir):
       import zipimport
       for init_path in sys.path:
           verify(init_path)
+          if init_path.split('.')[-1] == 'zip':
+              continue
           try:
               importer = zipimport.zipimporter(init_path)
               code = importer.get_code("%s")
