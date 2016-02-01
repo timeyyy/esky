@@ -5,6 +5,9 @@
   esky.sudo.sudo_base:  base functionality for esky sudo helpers
 
 """
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 
 import os
 import sys
@@ -13,7 +16,7 @@ import struct
 import hmac
 
 try:
-    import cPickle as pickle
+    import pickle as pickle
 except ImportError:
     import pickle
 

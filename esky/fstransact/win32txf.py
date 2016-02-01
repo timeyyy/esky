@@ -5,6 +5,7 @@
   esky.fstransact.win32fxt:  win32 transactional filesystem operations
 
 """
+from builtins import object
 
 
 import os
@@ -46,7 +47,7 @@ ERROR_TRANSACTIONAL_OPEN_NOT_ALLOWED = 6832
 
 def unicode_path(path):
     if sys.version_info[0] < 3:
-        if not isinstance(path, unicode):
+        if not isinstance(path, str):
             path = path.decode(sys.getfilesystemencoding())
     return path
 

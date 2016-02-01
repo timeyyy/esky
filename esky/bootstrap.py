@@ -32,6 +32,8 @@ use during the bootstrap process:
 
 
 """
+from builtins import range
+from builtins import object
 
 
 import sys
@@ -130,7 +132,7 @@ elif "nt" in sys.builtin_module_names:
                 pass
             if exists(pathjoin(tdir,"esky-slave-procs")):
                 flags = nt.O_CREAT|nt.O_EXCL|nt.O_TEMPORARY|nt.O_NOINHERIT
-                for i in xrange(10):
+                for i in range(10):
                     tfilenm = "slave-%d.%d.txt" % (nt.getpid(),i,)
                     tfilenm = pathjoin(tdir,"esky-slave-procs",tfilenm)
                     try:
@@ -148,11 +150,11 @@ elif "nt" in sys.builtin_module_names:
         _exit_code[0] = res
         raise SystemExit(res)
     #  A fake fcntl module which is false, but can fake out RPython
-    class fcntl:
+    class fcntl(object):
         LOCK_SH = 0
         def flock(self,fd,mode):
             pass
-        def __nonzero__(self):
+        def __bool__(self):
             return False
     fcntl = fcntl()
 else:
@@ -167,7 +169,7 @@ if __rpython__:
     # RPython doesn't have access to the "sys" module, so we fake it out.
     # The entry_point function will set these value appropriately.
     _sys = sys
-    class sys:
+    class sys(object):
         platform = _sys.platform
         executable = _sys.executable
         argv = _sys.argv
@@ -202,7 +204,7 @@ if __rpython__:
         slst = []
         if reverse:
             for item in lst:
-                for j in xrange(len(slst)):
+                for j in range(len(slst)):
                     if not _list_gt(slst[j][0],item[0]):
                         slst.insert(j,item)
                         break 
@@ -210,7 +212,7 @@ if __rpython__:
                     slst.append(item)
         else:
             for item in lst:
-                for j in xrange(len(slst)):
+                for j in range(len(slst)):
                     if _list_gt(slst[j][0],item[0]):
                         slst.insert(j,item)
                         break 
@@ -230,7 +232,7 @@ if __rpython__:
     # RPython doesn't provide the "fcntl" module.  Fake it.
     # TODO: implement it using externals
     if fcntl:
-        class fcntl:
+        class fcntl(object):
             LOCK_SH = fcntl.LOCK_SH
             def flock(self,fd,mode):
                 pass

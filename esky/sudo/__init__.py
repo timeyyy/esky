@@ -30,6 +30,10 @@ We also provide some handy utility functions:
 """
 
 from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import object
 
 import sys
 import time
@@ -44,7 +48,7 @@ def functools():
 @lazy_import
 def pickle():
     try:
-       import cPickle as pickle
+       import pickle as pickle
     except ImportError:
         import pickle
     return pickle

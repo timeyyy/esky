@@ -8,6 +8,7 @@ PyPy.  In theory, this should provide for faster startup and less resource
 usage than building the bootstrap exes out of the frozen application stubs.
 
 """
+from builtins import str
 
 from __future__ import with_statement
 

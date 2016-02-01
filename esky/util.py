@@ -8,6 +8,13 @@
 
 from __future__ import with_statement
 from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import next
+from builtins import hex
+from builtins import range
+from past.builtins import basestring
+from builtins import object
 
 import sys
 import errno
@@ -75,7 +82,7 @@ class _LazyImport(object):
                 self._esky_lazy_load()
             return getattr(self._esky_lazy_target,attr)
 
-    def __nonzero__(self):
+    def __bool__(self):
         if self._esky_lazy_target is _LazyImport:
             self._esky_lazy_load()
         return bool(self._esky_lazy_target)
@@ -114,9 +121,9 @@ def itertools():
 @lazy_import
 def StringIO():
     try:
-        import cStringIO as StringIO
+        import io as StringIO
     except ImportError:
-        import StringIO
+        import io
     return StringIO
 
 @lazy_import
@@ -210,7 +217,7 @@ def pairwise(iterable):
         next(b)
     except StopIteration:
         pass
-    return itertools.izip(a,b)
+    return zip(a,b)
 
 
 def common_prefix(iterables):
@@ -222,7 +229,7 @@ def common_prefix(iterables):
         raise ValueError("at least one iterable is required")
     for item in iterables:
         count = 0
-        for (c1,c2) in itertools.izip(prefix,item):
+        for (c1,c2) in zip(prefix,item):
             if c1 != c2:
                 break
             count += 1
@@ -282,7 +289,7 @@ def extract_zipfile(source,target,name_filter=None):
             zf_open = zf.open
         else:
             def zf_open(nm,mode):
-                return StringIO.StringIO(zf.read(nm))
+                return io.StringIO(zf.read(nm))
         for nm in zf.namelist():
             if nm.endswith("/"):
                 continue
@@ -520,7 +527,7 @@ def really_rename(source,target):
     if sys.platform != "win32":
         os.rename(source,target)
     else:
-        for _ in xrange(100):
+        for _ in range(100):
             try:
                 os.rename(source,target)
             except WindowsError as e:
@@ -548,7 +555,7 @@ def really_rmtree(path):
         if not os.path.exists(path):
             shutil.rmtree(path)
         #  This is a little retry loop that catches troublesome errors.
-        for _ in xrange(100):
+        for _ in range(100):
             try:
                 shutil.rmtree(path)
             except WindowsError as e:
