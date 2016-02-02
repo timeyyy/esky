@@ -8,6 +8,9 @@ These definitions live in a separate sub-module to avoid circular imports,
 but you should access them directly from the main 'esky' namespace.
 
 """
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
 
 class Error(Exception):
     """Base error class for esky."""

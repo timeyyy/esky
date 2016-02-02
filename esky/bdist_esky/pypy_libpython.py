@@ -8,6 +8,9 @@ loading and exposing a python environment using clibffi.  It's used by the
 pypy-compiled bootstrap exes to bootstrap a version dir in-process.
 
 """
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
 
 
 from pypy.rlib import clibffi
