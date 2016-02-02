@@ -527,7 +527,7 @@ class bdist_esky(Command):
         or equivalent, alongside the python files for that package.
         """
         if self.distribution.package_data:
-            for pkg, data in list(self.distribution.package_data.items()):
+            for pkg, data in self.distribution.package_data.items():
                 pkg_dir = self.get_package_dir(pkg)
                 pkg_path = pkg.replace(".", "/")
                 if isinstance(data, basestring):
