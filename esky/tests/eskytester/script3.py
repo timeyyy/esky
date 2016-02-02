@@ -1,3 +1,6 @@
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
 
 #  Third entry point for testing an esky install.
 
@@ -30,7 +33,7 @@ if os.environ.get("ESKY_NEEDSROOT",""):
 try:
     app.cleanup()
 except esky.EskyLockedError:
-    print "LOCKED, SLEEPING"
+    print("LOCKED, SLEEPING")
     time.sleep(10)
     app.cleanup()
 assert os.path.isdir(os.path.join(app._get_versions_dir(),"eskytester-0.3."+platform))

@@ -12,6 +12,9 @@ specified URL to look for new versions.
 """
 
 from __future__ import with_statement
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
 
 import os
 import re

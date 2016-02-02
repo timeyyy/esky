@@ -30,6 +30,8 @@ We also provide some handy utility functions:
 """
 
 from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
 
 import sys
 import time
@@ -235,9 +237,9 @@ class SudoProxy(object):
         pipe = self.__dict__["pipe"]
         if not _get_sudo_iterator(target, attr):
 
-            @functools.wraps(method.im_func)
+            @functools.wraps(method.__func__)
             def wrapper(*args):
-                pipe.write(method.im_func.func_name.encode("ascii"))
+                pipe.write(method.__func__.__name__.encode("ascii"))
                 for arg in args:
                     pipe.write(str(arg).encode("ascii"))
                 (success, result) = pickle.loads(pipe.read())
@@ -246,9 +248,9 @@ class SudoProxy(object):
                 return result
         else:
 
-            @functools.wraps(method.im_func)
+            @functools.wraps(method.__func__)
             def wrapper(*args):
-                pipe.write(method.im_func.func_name.encode("ascii"))
+                pipe.write(method.__func__.__name__.encode("ascii"))
                 for arg in args:
                     pipe.write(str(arg).encode("ascii"))
                 (success, result) = pickle.loads(pipe.read())

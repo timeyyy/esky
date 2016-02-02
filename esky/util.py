@@ -8,6 +8,8 @@
 
 from __future__ import with_statement
 from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
 
 import sys
 import errno
@@ -45,7 +47,7 @@ def lazy_import(func):
         namespace = None
     else:
         namespace = f.f_locals
-    return _LazyImport(func.func_name, func, namespace)
+    return _LazyImport(func.__name__, func, namespace)
 
 
 class _LazyImport(object):
@@ -214,7 +216,7 @@ def pairwise(iterable):
     """Iterator over pairs of elements from the given iterable."""
     a, b = itertools.tee(iterable)
     try:
-        b.next()
+        next(b)
     except StopIteration:
         pass
     return itertools.izip(a, b)
@@ -224,7 +226,7 @@ def common_prefix(iterables):
     """Find the longest common prefix of a series of iterables."""
     iterables = iter(iterables)
     try:
-        prefix = iterables.next()
+        prefix = next(iterables)
     except StopIteration:
         raise ValueError("at least one iterable is required")
     for item in iterables:

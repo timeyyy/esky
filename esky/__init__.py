@@ -20,6 +20,8 @@ See https://github.com/cloudmatrix/esky/ for more information:
 
 from __future__ import with_statement
 from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import division
 
 __ver_major__ = 0
 __ver_minor__ = 9
@@ -366,7 +368,7 @@ class Esky(object):
                     except Exception:
                         act = actions.throw(*sys.exc_info())
                     else:
-                        act = actions.next()
+                        act = next(actions)
             except StopIteration:
                 return success
         finally:

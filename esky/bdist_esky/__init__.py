@@ -14,6 +14,9 @@ must be given the path to the top-level directory of the frozen app, and a
 """
 
 from __future__ import with_statement
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
 
 import os
 import sys
@@ -377,11 +380,11 @@ class bdist_esky(Command):
                 self.freezer_module.zipit(self, self.bootstrap_dir, zfname)
             else:
                 if self.compress == 'zip':
-                    print "zipping up the esky with compression"
+                    print("zipping up the esky with compression")
                     create_zipfile(self.bootstrap_dir, zfname, compress=True)
                     really_rmtree(self.bootstrap_dir)
                 elif self.compress == 'ZIP':
-                    print "zipping up the esky without compression"
+                    print("zipping up the esky without compression")
                     create_zipfile(self.bootstrap_dir, zfname, compress=False)
                     really_rmtree(self.bootstrap_dir)
                 else:
@@ -822,7 +825,7 @@ class bdist_esky_patch(Command):
             target_version = split_app_version(target_vdir)[1]
             patchfile = vdir + ".from-%s.patch" % (target_version, )
             patchfile = os.path.join(self.dist_dir, patchfile)
-            print "patching", target_esky, "against", source_esky, "=>", patchfile
+            print("patching", target_esky, "against", source_esky, "=>", patchfile)
             if not self.dry_run:
                 try:
                     esky.patch.main(["-Z", "diff", source_esky, target_esky,
