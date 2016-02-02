@@ -10,6 +10,10 @@ from __future__ import with_statement
 from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
+from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
+from builtins import *
 
 
 import os
@@ -131,10 +135,10 @@ def freeze(dist):
     cmd.excludes = excludes
     if "bundle_files" in options:
         if options["bundle_files"] < 3 and dist.compile_bootstrap_exes:
-             err = "can't compile bootstrap exes when bundle_files < 3"
-             raise RuntimeError(err)
-    for (nm,val) in options.iteritems():
-        setattr(cmd,nm,val)
+            err = "can't compile bootstrap exes when bundle_files < 3"
+            raise RuntimeError(err)
+    for (nm, val) in list(options.items()):
+        setattr(cmd, nm, val)
     cmd.dist_dir = dist.freeze_dir
     cmd.finalize_options()
     #  Actually run the freeze process
