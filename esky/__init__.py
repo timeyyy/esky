@@ -96,10 +96,7 @@ def base64():
 
 @lazy_import
 def pickle():
-    try:
-        import pickle as pickle
-    except ImportError:
-        import pickle
+    import pickle
     return pickle
 
 
