@@ -22,6 +22,13 @@ from __future__ import with_statement
 from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
+from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
+from builtins import next
+from past.builtins import basestring
+from builtins import *
+from builtins import object
 
 __ver_major__ = 0
 __ver_minor__ = 9
@@ -90,7 +97,7 @@ def base64():
 @lazy_import
 def pickle():
     try:
-        import cPickle as pickle
+        import pickle as pickle
     except ImportError:
         import pickle
     return pickle

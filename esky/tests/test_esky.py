@@ -5,6 +5,12 @@ from __future__ import with_statement
 from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
+from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import range
+from builtins import *
 
 import sys
 import os
@@ -15,13 +21,13 @@ import shutil
 import zipfile
 import threading
 import tempfile
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import hashlib
 import tarfile
 import time
 from contextlib import contextmanager
-from SimpleHTTPServer import SimpleHTTPRequestHandler
-from BaseHTTPServer import HTTPServer
+from http.server import SimpleHTTPRequestHandler
+from http.server import HTTPServer
 
 from distutils.core import setup as dist_setup
 from distutils import dir_util
@@ -649,7 +655,7 @@ class TestPatch(unittest.TestCase):
         for (tfname,hash) in self._TEST_FILES:
             tfpath = os.path.join(tfdir,tfname)
             if not os.path.exists(tfpath):
-                data = urllib2.urlopen(self._TEST_FILES_URL+tfname).read()
+                data = urllib.request.urlopen(self._TEST_FILES_URL+tfname).read()
                 assert hashlib.md5(data).hexdigest() == hash
                 with open(tfpath,"wb") as f:
                     f.write(data)
@@ -660,10 +666,10 @@ class TestPatch(unittest.TestCase):
     def test_patch_bigfile(self):
         tdir = tempfile.mkdtemp()
         try:
-            data = [os.urandom(100)*10 for i in xrange(6)]
+            data = [os.urandom(100)*10 for i in range(6)]
             for nm in ("source","target"):
                 with open(os.path.join(tdir,nm),"wb") as f:
-                    for i in xrange(1000):
+                    for i in range(1000):
                         for chunk in data:
                             f.write(chunk)
                 data[2],data[3] = data[3],data[2]
