@@ -130,15 +130,6 @@ def itertools():
 
 
 @lazy_import
-def StringIO():
-    try:
-        import io as StringIO
-    except ImportError:
-        import io
-    return StringIO
-
-
-@lazy_import
 def distutils():
     import distutils
     import distutils.log  # need to prompt cxfreeze about this dep
@@ -296,13 +287,14 @@ def extract_zipfile(source, target, name_filter=None):
     in the target directory.
     """
     zf = zipfile.ZipFile(source, "r")
-    try:
-        if hasattr(zf, "open"):
-            zf_open = zf.open
-        else:
-
-            def zf_open(nm, mode):
-                return io.StringIO(zf.read(nm))
+    with zipfile.ZipFile(source, "r") as zf:
+    # try:
+    #     if hasattr(zf, "open"):
+    #         zf_open = zf.open
+    #     else:
+    #
+    #         def zf_open(nm, mode):
+    #             return io.StringIO(zf.read(nm))
 
         for nm in zf.namelist():
             if nm.endswith("/"):
@@ -321,20 +313,22 @@ def extract_zipfile(source, target, name_filter=None):
                 target = zf.read(nm)
                 os.symlink(target, outfilenm)
                 continue
-            infile = zf_open(nm, "r")
-            try:
-                outfile = open(outfilenm, "wb")
-                try:
+            with zf.open(nm, 'r') as infile:
+            # infile = zf_open(nm, "r")
+            # try:
+                with open(outfilenm, "wb") as outfile:
+                # outfile = open(outfilenm, "wb")
+                # try:
                     shutil.copyfileobj(infile, outfile)
-                finally:
-                    outfile.close()
-            finally:
-                infile.close()
+                # finally:
+                #     outfile.close()
+            # finally:
+            #     infile.close()
             mode = zinfo.external_attr >> 16
             if mode:
                 os.chmod(outfilenm, mode)
-    finally:
-        zf.close()
+    # finally:
+    #     zf.close()
 
 
 def zipfile_common_prefix_dir(source):
