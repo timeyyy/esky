@@ -29,7 +29,19 @@ INITNAME = "cx_Freeze__init__"
 
 import esky
 from esky.util import is_core_dependency, compile_to_bytecode
+from esky.bdist_esky.f_util import freeze_future_cxfreeze, _freeze_future
 
+class Cx_FreezeFuture(cx_Freeze.Freezer):
+    '''
+    Working around some issues with freezing the future
+    module. Check esky.bdist_esky.f_util for details
+    '''
+    def __init__(self, *args, **kwargs):
+        # Don't put these in the library as we have to apply fixes to them
+        lib_path, zip_archive, broken_modules = _freeze_future(**kwargs)
+        for bad_module in broken_modules:
+            kwargs["excludes"].append(bad_module)
+        super().__init__(self, *args, **kwargs)
 
 def freeze(dist):
     """Freeze the given distribution data using cx_Freeze."""
@@ -73,8 +85,10 @@ def freeze(dist):
                                                 icon=exe.icon,
                                                 **exe._kwds))
     #  Freeze up the executables
-    f = cx_Freeze.Freezer(executables, **kwds)
+    f = Cx_FreezeFuture(executables, **kwds)
     f.Freeze()
+    freeze_future_cxfreeze()
+
     #  Copy data files into the freeze dir
     for (src, dst) in dist.get_data_files():
         dst = os.path.join(dist.freeze_dir, dst)
