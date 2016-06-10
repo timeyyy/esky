@@ -104,6 +104,12 @@ def threading():
 
 
 @lazy_import
+def apptester():
+    import esky.apptester
+    return apptester
+
+
+@lazy_import
 def esky():
     import esky
     import esky.finder
