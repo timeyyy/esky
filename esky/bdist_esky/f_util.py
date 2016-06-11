@@ -20,6 +20,7 @@ import shutil
 import functools
 import tempfile
 import py_compile
+import zipfile
 
 from distutils.dir_util import copy_tree # This overwrites any existing folders/files
 
@@ -141,13 +142,27 @@ def freeze_future(dist_dir, optimize, **freezer_options):
         pass
     #     make_pyc(broken_modules, cwd=fixdir)
 
-    # Todo Preserve the settings of compressing zip or not
-    # merge changes we made and rezip the library
+    # TODO Preserve the settings of compressing zip or not
+
+    # Hack to not overwride files of different case on windows..
+    def name_filter_add(name):
+        if name == name.lower():
+            return name
+        else:
+            return 'zlxfc.1klj$!@' + name
+    def name_filter_del(name):
+        return name.replace('zlxfc.1klj$!@', "", 1)
+
+    # Merge changes we made and rezip the library
     unzipped = tempfile.mkdtemp()
-    extract_zipfile(zip_archive, unzipped)
+    extract_zipfile(zip_archive, unzipped, name_filter_add)
     os.remove(zip_archive)
     copy_tree(fixdir, unzipped)
-    create_zipfile(unzipped, zip_archive)
+    create_zipfile(source=unzipped,
+                   target=zip_archive,
+                   compress=True,
+                   name_filter=name_filter_del,
+                   zip_func=zipfile.PyZipFile)
     shutil.rmtree(fixdir)
     shutil.rmtree(unzipped)
 

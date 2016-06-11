@@ -344,7 +344,9 @@ def create_zipfile(source,
                    target,
                    get_zipinfo=None,
                    members=None,
-                   compress=None):
+                   compress=None,
+                   zip_func=zipfile.ZipFile,
+                   name_filter=None):
     """Bundle the contents of a given directory into a zipfile.
 
     The argument 'source' names the directory to read, while 'target' names
@@ -361,55 +363,69 @@ def create_zipfile(source,
 
     If the optional argument 'compress' is given, it must be a bool indicating
     whether to compress the files by default.  The default is no compression.
+
+    'zip_func' : A different function can be used to do the zipping, useful for
+               zipfile.PyZipFile, defaults to zipfile.ZipFile
+
+    'name_filter' must be a function mapping names from the zipfile to names
     """
     if not compress:
         compress_type = zipfile.ZIP_STORED
     else:
         compress_type = zipfile.ZIP_DEFLATED
-    zf = zipfile.ZipFile(target, "w", compression=compress_type)
-    if members is None:
 
+    if members is None:
         def gen_members():
             for (dirpath, dirnames, filenames) in os.walk(source):
                 for fn in filenames:
                     yield os.path.join(dirpath, fn)[len(source) + 1:]
 
         members = gen_members()
-    for fpath in members:
-        if isinstance(fpath, zipfile.ZipInfo):
-            zinfo = fpath
-            fpath = os.path.join(source, zinfo.filename)
-        else:
-            if get_zipinfo:
-                zinfo = get_zipinfo(fpath)
+
+    with zip_func(target, "w", compression=compress_type) as zf:
+        for fpath in members:
+            if isinstance(fpath, zipfile.ZipInfo):
+                zinfo = fpath
+                name = fpath.filename
+                if name_filter:
+                    name = name_filter(name)
+                fpath = os.path.join(source, name)
             else:
-                zinfo = None
-            fpath = os.path.join(source, fpath)
-        if os.path.islink(fpath):
-            # For information about adding symlinks to a zip file, see
-            # https://mail.python.org/pipermail/python-list/2005-June/322180.html
-            dest = os.readlink(fpath)
-            if zinfo is None:
-                zinfo = zipfile.ZipInfo()
-                zinfo.filename = fpath[len(source) + 1:]
-            elif isinstance(zinfo, basestring):
-                link = zinfo
-                zinfo = zipfile.ZipInfo()
-                zinfo.filename = link
-            else:  # isinstance(zinfo,zipfile.ZipInfo)
-                pass
-            zinfo.create_system = 3
-            zinfo.external_attr = 2716663808  # symlink: 0xA1ED0000
-            zf.writestr(zinfo, dest)
-        else:  # not a symlink
-            if zinfo is None:
-                zf.write(fpath, fpath[len(source) + 1:])
-            elif isinstance(zinfo, basestring):
-                zf.write(fpath, zinfo)
+                if get_zipinfo:
+                    zinfo = get_zipinfo(fpath)
+                else:
+                    zinfo = None
+                fpath = os.path.join(source, fpath)
+            if os.path.islink(fpath):
+                # For information about adding symlinks to a zip file, see
+                # https://mail.python.org/pipermail/python-list/2005-June/322180.html
+                dest = os.readlink(fpath)
+                if zinfo is None:
+                    zinfo = zipfile.ZipInfo()
+                    zinfo.filename = fpath[len(source) + 1:]
+                elif isinstance(zinfo, basestring):
+                    link = zinfo
+                    zinfo = zipfile.ZipInfo()
+                    zinfo.filename = link
+                zinfo.create_system = 3
+                # symlink: 0xA1ED0000
+                zinfo.external_attr = 2716663808
+                zf.writestr(zinfo, dest)
+            # not a symlink
             else:
-                with open(fpath, "rb") as f:
-                    zf.writestr(zinfo, f.read())
-    zf.close()
+                if zinfo is None:
+                    name = fpath[len(source) + 1:]
+                    if name_filter:
+                        name = name_filter(name)
+                    zf.write(fpath, name)
+                elif isinstance(zinfo, basestring):
+                    name = zinfo
+                    if name_filter:
+                        name = name_filter(name)
+                    zf.write(fpath, name)
+                else:
+                    with open(fpath, "rb") as f:
+                        zf.writestr(zinfo, f.read())
 
 
 _CACHED_PLATFORM = None
