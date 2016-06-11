@@ -41,9 +41,6 @@ class EskyAppTester():
         print('Looking :%s, found : %s' %(version, found))
 
 
-    def test_all(self):
-        pass
-
     def test_can_upgrade(self, params=None, only_latest=False):
         '''
         extracts a zip
@@ -100,7 +97,8 @@ class EskyAppTester():
                 else:
                     cmd = exe
                 if self.verbose:
-                    print('Spawning apptester!')
+                    print('Starting test for:', zfile)
+                    print(cmd)
                 proc = subprocess.Popen(cmd)
                 if proc.wait():
                     if self.verbose:
