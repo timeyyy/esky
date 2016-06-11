@@ -31,9 +31,9 @@ __ver_sub__ = "dev"
 __ver_tuple__ = (__ver_major__, __ver_minor__, __ver_patch__, __ver_sub__)
 __version__ = "%d.%d.%d%s" % __ver_tuple__
 
+
 import sys
 import errno
-
 if sys.platform != "win32":
     import fcntl
 
@@ -146,6 +146,7 @@ class Esky(object):
         self.keep_sudo_proxy_alive = False
         self._old_sudo_proxies = []
         self.version_finder = version_finder
+        self._update_dir = appdirs.site_data_dir(appdir_or_exe, appdir_or_exe)
         self.reinitialize()
 
     def _init_from_appdir(self, appdir_or_exe):
@@ -180,7 +181,7 @@ class Esky(object):
 
     def _get_update_dir(self):
         """Get the directory path in which self.version_finder can work."""
-        return os.path.join(self._get_versions_dir(), "updates")
+        return os.path.join(self._get_versions_dir(), self._update_dir)
 
     def _get_versions_dir(self):
         """Get the directory path containing individual version dirs."""
@@ -422,7 +423,7 @@ class Esky(object):
         #  We except the currently-executing version, and silently
         #  ignore any locked versions.
         manifest = self._version_manifest(best_version)
-        manifest.add("updates")
+        manifest.add(self._update_dir)
         manifest.add("locked")
         manifest.add(best_version)
         if self.active_version:
