@@ -234,7 +234,7 @@ def _freeze_future(**freezer_options):
         lib_path = os.path.join(sys.exec_prefix, 'Lib')
     elif 'linux' in sys.platform:
         import lib2to3
-        lib_path = os.path.basename(os.path.basename(lib2to3.__file__))
+        lib_path = os.path.dirname(os.path.dirname(lib2to3.__file__))
     assert os.path.exists(lib_path)
     return lib_path, zip_archive, broken_modules
 
