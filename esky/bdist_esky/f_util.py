@@ -237,8 +237,8 @@ def _freeze_future(**freezer_options):
         lib_path = os.path.join('/usr', 'lib', pyver)
         mod_path = os.path.abspath(os.path.join('/usr', 'lib', pyver, 'lib2to3'))
         if not os.path.exists(mod_path):
-            here = os.listdir(lib_path)
-            above = os.listdr('/usr/lib')
+            ha = site.getsitepackages()
+            above = os.listdir('/usr/lib')
             raise Exception('Could not find python lib path, please set python_lib_path in setup options')
     assert os.path.exists(lib_path)
     return lib_path, zip_archive, broken_modules
