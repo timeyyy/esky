@@ -233,13 +233,8 @@ def _freeze_future(**freezer_options):
     if os.name == 'nt':
         lib_path = os.path.join(sys.exec_prefix, 'Lib')
     elif 'linux' in sys.platform:
-        pyver = 'python%d.%d' % (sys.version_info[0], sys.version_info[1])
-        lib_path = os.path.join('/usr', 'lib', pyver)
-        mod_path = os.path.abspath(os.path.join('/usr', 'lib', pyver, 'lib2to3'))
-        if not os.path.exists(mod_path):
-            ha = site.getsitepackages()
-            above = os.listdir('/usr/lib')
-            raise Exception('Could not find python lib path, please set python_lib_path in setup options')
+        import lib2to3
+        lib_path = os.basename(os.basename(lib2to3.__file__))
     assert os.path.exists(lib_path)
     return lib_path, zip_archive, broken_modules
 
